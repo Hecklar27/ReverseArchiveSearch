@@ -52,9 +52,10 @@ def install_pytorch(use_cuda=False):
     """Install PyTorch with or without CUDA"""
     if use_cuda:
         print("\n🚀 Installing PyTorch with CUDA support...")
-        # Create a temporary requirements file for CUDA with exact working versions
-        cuda_requirements = """torch==2.0.1+cu118
-torchvision==0.15.2+cu118
+        # Updated CUDA requirements with correct format - no +cu118 suffix when using --index-url
+        cuda_requirements = """torch==2.0.1
+torchvision==0.15.2
+torchaudio==2.0.2
 numpy==1.26.4
 Pillow==11.2.1
 requests==2.32.3
@@ -97,6 +98,7 @@ wcwidth==0.2.13"""
         # Create CPU requirements with exact working versions
         cpu_requirements = """torch==2.0.1
 torchvision==0.15.2
+torchaudio==2.0.2
 numpy==1.26.4
 Pillow==11.2.1
 requests==2.32.3
@@ -163,7 +165,7 @@ def main():
     print("✅ Tested Configuration:")
     print("   Hardware: NVIDIA GeForce RTX 2080 (7GB VRAM)")
     print("   CUDA: 11.8")
-    print("   PyTorch: 2.0.1+cu118")
+    print("   PyTorch: 2.0.1 (with CUDA 11.8 support)")
     print("   Status: Fully functional with GPU acceleration")
     print("=" * 50)
     
