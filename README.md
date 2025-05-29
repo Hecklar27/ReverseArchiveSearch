@@ -1,12 +1,13 @@
 # Reverse Archive Search
 
 ## Quick Start
-1. Install dependencies: `python setup.py`
-2. Run: `python main.py`
-3. Select your query image
-4. Select Discord JSON export file
-5. **Important**: Click "Pre-process Archive" to build cache (one-time setup)
-6. Click "Cached Search" for lightning-fast results!
+1. Install NVIDIA Cuda Toolkit (If you have an AMD card skip this step, will have to use CPU based processing)
+2. Install dependencies: `python setup.py`
+3. Run: `python main.py`
+4. Select your query image
+5. Select Discord JSON export file
+6. **Important**: Click "Pre-process Archive" to build cache (one-time setup)
+7. Click "Cached Search" for lightning-fast results!
 
 ## Performance Comparison
 - **Real-time Search**: 2+ minutes (downloads images on-demand)
