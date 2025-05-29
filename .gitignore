@@ -1,0 +1,7 @@
+./memory-bank
+./cache
+./embeddings.pkl
+./metadata.pkl
+./urls_index.pkl
+./reverse_archive_search.log
+./messageExample.json
