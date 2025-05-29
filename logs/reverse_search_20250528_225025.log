@@ -206,3 +206,288 @@
 2025-05-28 22:51:29 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
 2025-05-28 22:51:30 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
 2025-05-28 22:51:30 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:31 - src.search.strategies - INFO - Downloading batch 43: 32 images
+2025-05-28 22:51:31 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:32 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:32 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:37 - src.search.strategies - INFO - Downloading batch 44: 32 images
+2025-05-28 22:51:37 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:37 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:37 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:40 - src.search.strategies - INFO - Downloading batch 45: 32 images
+2025-05-28 22:51:40 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:40 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:40 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:41 - src.search.strategies - INFO - Downloading batch 46: 32 images
+2025-05-28 22:51:41 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:41 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:41 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:42 - src.search.strategies - INFO - Downloading batch 47: 32 images
+2025-05-28 22:51:42 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:43 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:43 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:45 - src.search.strategies - INFO - Downloading batch 48: 32 images
+2025-05-28 22:51:45 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:45 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:45 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:46 - src.search.strategies - INFO - Downloading batch 49: 32 images
+2025-05-28 22:51:46 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:46 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:46 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:47 - src.search.strategies - INFO - Downloading batch 50: 32 images
+2025-05-28 22:51:47 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:47 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:47 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:48 - src.search.strategies - INFO - Downloading batch 51: 32 images
+2025-05-28 22:51:48 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:48 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:48 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:49 - src.search.strategies - INFO - Downloading batch 52: 32 images
+2025-05-28 22:51:49 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:49 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:49 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:50 - src.search.strategies - INFO - Downloading batch 53: 32 images
+2025-05-28 22:51:50 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:51 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:51 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:51 - src.search.strategies - INFO - Downloading batch 54: 32 images
+2025-05-28 22:51:51 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:52 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:52 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:52 - src.search.strategies - INFO - Downloading batch 55: 32 images
+2025-05-28 22:51:52 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:53 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:53 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:53 - src.search.strategies - INFO - Downloading batch 56: 32 images
+2025-05-28 22:51:53 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:54 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:54 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:55 - src.search.strategies - INFO - Downloading batch 57: 32 images
+2025-05-28 22:51:55 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:56 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:56 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:57 - src.search.strategies - INFO - Downloading batch 58: 32 images
+2025-05-28 22:51:57 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:57 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:57 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:58 - src.search.strategies - INFO - Downloading batch 59: 32 images
+2025-05-28 22:51:58 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:58 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:58 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:51:59 - src.search.strategies - INFO - Downloading batch 60: 32 images
+2025-05-28 22:51:59 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:51:59 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:51:59 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:00 - src.search.strategies - INFO - Downloading batch 61: 32 images
+2025-05-28 22:52:00 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:01 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:01 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:01 - src.search.strategies - INFO - Downloading batch 62: 32 images
+2025-05-28 22:52:01 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:02 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:02 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:04 - src.search.strategies - INFO - Downloading batch 63: 32 images
+2025-05-28 22:52:04 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:04 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:04 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:05 - src.search.strategies - INFO - Downloading batch 64: 32 images
+2025-05-28 22:52:05 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:06 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:06 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:07 - src.search.strategies - INFO - Downloading batch 65: 32 images
+2025-05-28 22:52:07 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:07 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:07 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:08 - src.search.strategies - INFO - Downloading batch 66: 32 images
+2025-05-28 22:52:08 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:09 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:09 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:09 - src.search.strategies - INFO - Downloading batch 67: 32 images
+2025-05-28 22:52:09 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:10 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:10 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:13 - src.search.strategies - INFO - Downloading batch 68: 32 images
+2025-05-28 22:52:13 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:13 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:13 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:14 - src.search.strategies - INFO - Downloading batch 69: 32 images
+2025-05-28 22:52:14 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:14 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:14 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:15 - src.search.strategies - INFO - Downloading batch 70: 32 images
+2025-05-28 22:52:15 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:16 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:16 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:17 - src.search.strategies - INFO - Downloading batch 71: 32 images
+2025-05-28 22:52:17 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:18 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:18 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:19 - src.search.strategies - INFO - Downloading batch 72: 32 images
+2025-05-28 22:52:19 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:19 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:19 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:20 - src.search.strategies - INFO - Downloading batch 73: 32 images
+2025-05-28 22:52:20 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:21 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:21 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:21 - src.search.strategies - INFO - Downloading batch 74: 32 images
+2025-05-28 22:52:21 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:22 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:22 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:22 - src.search.strategies - INFO - Downloading batch 75: 32 images
+2025-05-28 22:52:22 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:23 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:23 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:23 - src.search.strategies - INFO - Downloading batch 76: 32 images
+2025-05-28 22:52:23 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:24 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:24 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:24 - src.search.strategies - INFO - Downloading batch 77: 32 images
+2025-05-28 22:52:24 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:25 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:25 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:25 - src.search.strategies - INFO - Downloading batch 78: 32 images
+2025-05-28 22:52:25 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:26 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:26 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:26 - src.search.strategies - INFO - Downloading batch 79: 32 images
+2025-05-28 22:52:26 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:27 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:27 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:28 - src.search.strategies - INFO - Downloading batch 80: 32 images
+2025-05-28 22:52:28 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:28 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:28 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:29 - src.search.strategies - INFO - Downloading batch 81: 32 images
+2025-05-28 22:52:29 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:29 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:29 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:30 - src.search.strategies - INFO - Downloading batch 82: 32 images
+2025-05-28 22:52:30 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:30 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:30 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:31 - src.search.strategies - INFO - Downloading batch 83: 32 images
+2025-05-28 22:52:31 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:32 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:32 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:32 - src.search.strategies - INFO - Downloading batch 84: 32 images
+2025-05-28 22:52:32 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:33 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:33 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:34 - src.search.strategies - INFO - Downloading batch 85: 32 images
+2025-05-28 22:52:34 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:34 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:34 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:35 - src.search.strategies - INFO - Downloading batch 86: 32 images
+2025-05-28 22:52:35 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:35 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:35 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:36 - src.search.strategies - INFO - Downloading batch 87: 32 images
+2025-05-28 22:52:36 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:36 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:36 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:37 - src.search.strategies - INFO - Downloading batch 88: 32 images
+2025-05-28 22:52:37 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:37 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:37 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:38 - src.search.strategies - INFO - Downloading batch 89: 32 images
+2025-05-28 22:52:38 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:38 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:38 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:38 - src.search.strategies - INFO - Downloading batch 90: 32 images
+2025-05-28 22:52:38 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:39 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:39 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:39 - src.search.strategies - INFO - Downloading batch 91: 32 images
+2025-05-28 22:52:39 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:40 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:40 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:40 - src.search.strategies - INFO - Downloading batch 92: 32 images
+2025-05-28 22:52:40 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:41 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:41 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:42 - src.search.strategies - INFO - Downloading batch 93: 32 images
+2025-05-28 22:52:42 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:42 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:42 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:43 - src.search.strategies - INFO - Downloading batch 94: 32 images
+2025-05-28 22:52:43 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:44 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:44 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:44 - src.search.strategies - INFO - Downloading batch 95: 32 images
+2025-05-28 22:52:44 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:45 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:45 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:45 - src.search.strategies - INFO - Downloading batch 96: 32 images
+2025-05-28 22:52:45 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:46 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:46 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:47 - src.search.strategies - INFO - Downloading batch 97: 32 images
+2025-05-28 22:52:47 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:47 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:47 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:48 - src.search.strategies - INFO - Downloading batch 98: 32 images
+2025-05-28 22:52:48 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:48 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:48 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:49 - src.search.strategies - INFO - Downloading batch 99: 32 images
+2025-05-28 22:52:49 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:49 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:49 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:50 - src.search.strategies - INFO - Downloading batch 100: 32 images
+2025-05-28 22:52:50 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:51 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:51 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:52 - src.search.strategies - INFO - Downloading batch 101: 32 images
+2025-05-28 22:52:52 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:52 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:52 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:53 - src.search.strategies - INFO - Downloading batch 102: 32 images
+2025-05-28 22:52:53 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:53 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:53 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:54 - src.search.strategies - INFO - Downloading batch 103: 32 images
+2025-05-28 22:52:54 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:54 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:54 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:55 - src.search.strategies - INFO - Downloading batch 104: 32 images
+2025-05-28 22:52:55 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:56 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:56 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:56 - src.search.strategies - INFO - Downloading batch 105: 32 images
+2025-05-28 22:52:56 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:57 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:57 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:57 - src.search.strategies - INFO - Downloading batch 106: 32 images
+2025-05-28 22:52:57 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:58 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:58 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:52:59 - src.search.strategies - INFO - Downloading batch 107: 32 images
+2025-05-28 22:52:59 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:52:59 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:52:59 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:53:00 - src.search.strategies - INFO - Downloading batch 108: 32 images
+2025-05-28 22:53:00 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:53:00 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:53:00 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:53:01 - src.search.strategies - INFO - Downloading batch 109: 32 images
+2025-05-28 22:53:01 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:53:01 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:53:01 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:53:02 - src.search.strategies - INFO - Downloading batch 110: 32 images
+2025-05-28 22:53:02 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:53:02 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:53:02 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:53:03 - src.search.strategies - INFO - Downloading batch 111: 32 images
+2025-05-28 22:53:03 - src.search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-28 22:53:03 - src.search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-28 22:53:03 - src.search.strategies - INFO - Encoding 32 images with CLIP
+2025-05-28 22:53:04 - src.search.strategies - INFO - Downloading batch 112: 9 images
+2025-05-28 22:53:04 - src.search.image_downloader - INFO - Starting concurrent download of 9 images with 8 workers
+2025-05-28 22:53:04 - src.search.image_downloader - INFO - Batch download complete: 9/9 successful
+2025-05-28 22:53:04 - src.search.strategies - INFO - Encoding 9 images with CLIP
+2025-05-28 22:53:04 - src.search.strategies - INFO - Optimized real-time search completed in 128.52s
+2025-05-28 22:53:04 - src.search.strategies - INFO - Processed 3561/3561 images successfully
+2025-05-28 22:53:04 - src.search.strategies - INFO - Found 20 results
+2025-05-28 22:53:04 - src.gui.main_window - INFO - Processed 3561/3561 images (100.0% success) in 128.5s
+2025-05-28 22:53:04 - src.gui.main_window - INFO - Search complete - found 20 results in 128.5s
