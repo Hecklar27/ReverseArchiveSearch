@@ -2,6 +2,9 @@
 """
 Setup script for Reverse Archive Search.
 Automates the installation of dependencies including CLIP and CUDA support.
+Usage:
+    python setup.py          # Normal installation
+    python setup.py cleanup  # Remove all dependencies for testing
 """
 
 import subprocess
@@ -52,74 +55,61 @@ def install_pytorch(use_cuda=False):
     """Install PyTorch with or without CUDA"""
     if use_cuda:
         print("\n🚀 Installing PyTorch with CUDA support...")
-        # Updated CUDA requirements with correct format - no +cu118 suffix when using --index-url
-        cuda_requirements = """torch==2.0.1
-torchvision==0.15.2
-torchaudio==2.0.2
-numpy==1.26.4
-Pillow==11.2.1
-requests==2.32.3
-colorlog==6.9.0
-certifi==2025.4.26
-charset-normalizer==3.4.2
-colorama==0.4.6
-filelock==3.18.0
-ftfy==6.3.1
-idna==3.10
-Jinja2==3.1.6
-MarkupSafe==3.0.2
-mpmath==1.3.0
-networkx==3.4.2
-packaging==25.0
-regex==2024.11.6
-sympy==1.14.0
-tqdm==4.67.1
-typing_extensions==4.13.2
-urllib3==2.4.0
-wcwidth==0.2.13"""
         
-        with open("requirements_cuda_temp.txt", "w") as f:
-            f.write(cuda_requirements)
+        # First install PyTorch packages from CUDA index
+        pytorch_requirements = """torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0"""
+        
+        with open("requirements_pytorch_temp.txt", "w") as f:
+            f.write(pytorch_requirements)
         
         success = run_command(
-            "pip install -r requirements_cuda_temp.txt --index-url https://download.pytorch.org/whl/cu118",
-            "Installing CUDA-enabled PyTorch"
+            "pip install -r requirements_pytorch_temp.txt --index-url https://download.pytorch.org/whl/cu118",
+            "Installing PyTorch with CUDA support"
         )
         
         # Clean up temporary file
         try:
-            os.remove("requirements_cuda_temp.txt")
+            os.remove("requirements_pytorch_temp.txt")
+        except:
+            pass
+        
+        if not success:
+            return False
+        
+        # Then install other dependencies from standard PyPI
+        other_requirements = """numpy
+Pillow
+requests
+colorlog"""
+        
+        with open("requirements_other_temp.txt", "w") as f:
+            f.write(other_requirements)
+        
+        success = run_command(
+            "pip install -r requirements_other_temp.txt",
+            "Installing other dependencies"
+        )
+        
+        # Clean up temporary file
+        try:
+            os.remove("requirements_other_temp.txt")
         except:
             pass
             
         return success
     else:
         print("\n💻 Installing CPU-only PyTorch...")
-        # Create CPU requirements with exact working versions
-        cpu_requirements = """torch==2.0.1
-torchvision==0.15.2
-torchaudio==2.0.2
-numpy==1.26.4
-Pillow==11.2.1
-requests==2.32.3
-colorlog==6.9.0
-certifi==2025.4.26
-charset-normalizer==3.4.2
-colorama==0.4.6
-filelock==3.18.0
-ftfy==6.3.1
-idna==3.10
-Jinja2==3.1.6
-MarkupSafe==3.0.2
-mpmath==1.3.0
-networkx==3.4.2
-packaging==25.0
-regex==2024.11.6
-sympy==1.14.0
-tqdm==4.67.1
-typing_extensions==4.13.2
-urllib3==2.4.0
-wcwidth==0.2.13"""
+        
+        # Install all packages from standard PyPI for CPU
+        cpu_requirements = """torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0
+numpy
+Pillow
+requests
+colorlog"""
         
         with open("requirements_cpu_temp.txt", "w") as f:
             f.write(cpu_requirements)
@@ -158,6 +148,89 @@ def verify_cuda_installation():
         print(f"Error verifying CUDA: {e}")
         return False
 
+def cleanup_dependencies():
+    """Remove all installed dependencies for testing"""
+    print("Reverse Archive Search - Dependency Cleanup")
+    print("=" * 50)
+    print("🧹 This will remove all installed dependencies")
+    print("   Use this for testing the setup process")
+    print("=" * 50)
+    
+    # Confirm cleanup
+    response = input("\nAre you sure you want to remove all dependencies? (y/N): ")
+    if response.lower() != 'y':
+        print("Cleanup cancelled.")
+        return False
+    
+    # List of packages to uninstall
+    packages_to_remove = [
+        "torch",
+        "torchvision", 
+        "torchaudio",
+        "clip-by-openai",  # CLIP package name
+        "numpy",
+        "Pillow",
+        "requests",
+        "colorlog",
+        "fsspec",
+        "sympy",
+        "networkx",
+        "jinja2",
+        "filelock",
+        "typing-extensions",
+        "ftfy",
+        "regex",
+        "tqdm",
+        "packaging"
+    ]
+    
+    print(f"\n🗑️  Removing packages: {', '.join(packages_to_remove)}")
+    
+    # Create uninstall command
+    uninstall_cmd = f"pip uninstall -y {' '.join(packages_to_remove)}"
+    
+    success = run_command(uninstall_cmd, "Uninstalling packages")
+    
+    # Clean up any temporary files
+    temp_files = [
+        "requirements_pytorch_temp.txt",
+        "requirements_other_temp.txt",
+        "requirements_cpu_temp.txt"
+    ]
+    
+    print(f"\n🧹 Cleaning temporary files...")
+    for temp_file in temp_files:
+        try:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                print(f"✓ Removed {temp_file}")
+        except Exception as e:
+            print(f"⚠️  Could not remove {temp_file}: {e}")
+    
+    # Clear cache directory if it exists
+    cache_dir = Path("cache")
+    if cache_dir.exists():
+        print(f"\n🗂️  Cache directory found: {cache_dir}")
+        response = input("Remove cache directory? (y/N): ")
+        if response.lower() == 'y':
+            try:
+                import shutil
+                shutil.rmtree(cache_dir)
+                print("✓ Cache directory removed")
+            except Exception as e:
+                print(f"⚠️  Could not remove cache directory: {e}")
+        else:
+            print("Cache directory preserved")
+    
+    if success:
+        print("\n✅ Cleanup completed successfully!")
+        print("You can now run 'python setup.py' to reinstall dependencies")
+    else:
+        print("\n⚠️  Cleanup completed with some warnings")
+        print("Some packages may not have been installed or already removed")
+    
+    return True
+
 def main():
     """Main setup function"""
     print("Reverse Archive Search - Dependency Setup")
@@ -165,8 +238,9 @@ def main():
     print("✅ Tested Configuration:")
     print("   Hardware: NVIDIA GeForce RTX 2080 (7GB VRAM)")
     print("   CUDA: 11.8")
-    print("   PyTorch: 2.0.1 (with CUDA 11.8 support)")
+    print("   PyTorch: 2.6.0 (with CUDA 11.8 support)")
     print("   Status: Fully functional with GPU acceleration")
+    print("   Note: Updated from 2.0.1 for current availability")
     print("=" * 50)
     
     # Check if we're in a virtual environment
@@ -263,5 +337,16 @@ def main():
     return True
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "cleanup":
+            success = cleanup_dependencies()
+            sys.exit(0 if success else 1)
+        else:
+            print(f"Unknown command: {sys.argv[1]}")
+            print("Usage:")
+            print("  python setup.py          # Normal installation") 
+            print("  python setup.py cleanup  # Remove all dependencies")
+            sys.exit(1)
+    
     success = main()
     sys.exit(0 if success else 1) 

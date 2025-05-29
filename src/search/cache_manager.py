@@ -7,6 +7,7 @@ import logging
 import pickle
 import time
 import numpy as np
+import torch
 from typing import List, Dict, Optional, Tuple, Any
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -25,8 +26,9 @@ class CacheMetadata:
         self.created_at = datetime.now()
         self.last_updated = datetime.now()
         self.total_images = 0
-        self.cache_version = "2.0"  # Updated for Phase 2 with message_type field
+        self.cache_version = "2.1"  # Updated for PyTorch version tracking
         self.clip_model = None
+        self.pytorch_version = torch.__version__  # Track PyTorch version
         self.url_to_index = {}  # URL -> index mapping
         self.index_to_metadata = {}  # index -> {message_id, attachment info, discord_url}
         
@@ -43,6 +45,7 @@ class CacheMetadata:
             'total_images': self.total_images,
             'cache_version': self.cache_version,
             'clip_model': self.clip_model,
+            'pytorch_version': getattr(self, 'pytorch_version', 'unknown'),
             'age_days': (datetime.now() - self.created_at).days
         }
 
@@ -84,6 +87,13 @@ class EmbeddingCacheManager:
             current_model = self.clip_engine.model_name
             if metadata.clip_model != current_model:
                 logger.info(f"CLIP model changed ({metadata.clip_model} -> {current_model}), cache invalid")
+                return False
+            
+            # Validate PyTorch version compatibility
+            current_pytorch_version = torch.__version__
+            cached_pytorch_version = getattr(metadata, 'pytorch_version', 'unknown')
+            if cached_pytorch_version != current_pytorch_version:
+                logger.info(f"PyTorch version changed ({cached_pytorch_version} -> {current_pytorch_version}), cache invalid")
                 return False
             
             # Validate cache version and required fields
@@ -347,8 +357,8 @@ class EmbeddingCacheManager:
         """Validate cache compatibility and required fields"""
         try:
             # Check cache version
-            if not hasattr(metadata, 'cache_version') or metadata.cache_version != "2.0":
-                logger.info(f"Cache version mismatch: expected 2.0, got {getattr(metadata, 'cache_version', 'unknown')}")
+            if not hasattr(metadata, 'cache_version') or metadata.cache_version not in ["2.0", "2.1"]:
+                logger.info(f"Cache version mismatch: expected 2.0/2.1, got {getattr(metadata, 'cache_version', 'unknown')}")
                 return False
             
             # Check if metadata has the required index_to_metadata structure
