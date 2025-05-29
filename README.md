@@ -13,7 +13,7 @@
 - **Real-time Search**: 2+ minutes (downloads images on-demand)
 - **Cached Search**: 1-5 seconds (uses pre-computed embeddings)
 
-## Cache System (Phase 2)
+## Cache System 
 The cache system provides 10-60x performance improvement by pre-computing CLIP embeddings.
 
 ### First Time Setup
