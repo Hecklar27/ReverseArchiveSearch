@@ -1,0 +1,23 @@
+# Phase 1: MVP Dependencies
+# Exact versions that have been tested and work together
+
+# Core ML/AI libraries
+torch==2.0.1
+torchvision==0.15.2
+numpy==1.26.4
+
+# CLIP - Must be installed separately due to version conflicts
+# Run: pip install git+https://github.com/openai/CLIP.git
+# This installs clip==1.0 compatible with torch 2.0.1
+
+# Image processing and HTTP
+Pillow==11.2.1
+requests==2.32.3
+
+# Optional: Enhanced logging
+colorlog==6.9.0
+
+# Installation Notes:
+# 1. Install basic requirements: pip install -r requirements.txt
+# 2. Install CLIP separately: pip install git+https://github.com/openai/CLIP.git
+# 3. Ensure numpy<2 for PyTorch compatibility 

@@ -1,0 +1,19 @@
+2025-05-28 21:16:31 - root - INFO - Logging to file: logs\reverse_search_20250528_211631.log
+2025-05-28 21:16:31 - __main__ - INFO - Starting Reverse Archive Search application
+2025-05-28 21:16:32 - src.search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-28 21:16:50 - src.search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080 (7GB VRAM)
+2025-05-28 21:16:50 - src.search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-28 21:16:50 - src.search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-28 21:16:52 - src.search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080 (7GB VRAM)
+2025-05-28 21:16:52 - src.search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-28 21:17:19 - src.gui.main_window - INFO - Parsing Discord JSON...
+2025-05-28 21:17:20 - src.data.discord_parser - INFO - Found 3688 total messages in archive
+2025-05-28 21:17:20 - src.data.discord_parser - INFO - Parsed 3462 messages with image attachments
+2025-05-28 21:17:20 - src.data.discord_parser - INFO - Statistics: {'total_messages': 3688, 'messages_with_attachments': 3462, 'total_attachments': 3561, 'parse_errors': 0}
+2025-05-28 21:17:20 - src.gui.main_window - INFO - Loaded 3462 messages with images
+2025-05-28 21:17:20 - src.gui.main_window - INFO - Parsed 3462 Discord messages with images
+2025-05-28 21:18:36 - src.gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\image.png
+2025-05-28 21:18:37 - src.gui.main_window - INFO - Searching for similar images...
+2025-05-28 21:18:37 - src.search.strategies - INFO - Using real-time search strategy
+2025-05-28 21:18:37 - src.search.strategies - INFO - Starting real-time search with 3462 messages
+2025-05-28 21:18:37 - src.search.strategies - INFO - Encoding user image: C:\Users\Aliba\Desktop\image.png
