@@ -1,7 +1,7 @@
 # Reverse Archive Search
 
 ## Quick Start
-1. Install dependencies: `pip install -r requirements.txt`
+1. Install dependencies: `python setup.py`
 2. Run: `python main.py`
 3. Select your query image
 4. Select Discord JSON export file
