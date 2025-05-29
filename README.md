@@ -16,7 +16,7 @@
 The cache system provides 10-60x performance improvement by pre-computing CLIP embeddings.
 
 ### First Time Setup
-1. Load your Discord JSON file
+1. Load your Discord JSON file (This take all day to export, I have provided one which goes up to 5/29/25)
 2. Click "Pre-process Archive" - this will:
    - Download all images from Discord
    - Generate CLIP embeddings for each image
