@@ -170,10 +170,30 @@ class MainWindow:
         """Update device information display"""
         try:
             device_info = self.search_engine.get_device_info()
+            
+            # Create detailed device text
             device_text = f"Device: {device_info['device'].upper()}"
-            if device_info['device'] == 'cuda':
-                device_text += f" ({device_info.get('gpu_name', 'Unknown GPU')})"
+            
+            if device_info.get('using_cuda', False):
+                # Using CUDA - show GPU info
+                gpu_name = device_info.get('gpu_name', 'Unknown GPU')
+                gpu_memory = device_info.get('gpu_memory_gb', 'Unknown')
+                device_text += f" ({gpu_name}, {gpu_memory}GB)"
+            elif device_info.get('gpu_available', False):
+                # CUDA available but not used
+                gpu_name = device_info.get('gpu_name', 'Unknown GPU')
+                device_text += f" (GPU available: {gpu_name} - not used)"
+            else:
+                # No CUDA support
+                device_text += " (No CUDA support)"
+            
             self.device_label.config(text=device_text)
+            
+            # Log detailed info for debugging
+            logger.info(f"Device Status: {device_info.get('cuda_status', 'Unknown')}")
+            if device_info.get('cuda_error'):
+                logger.warning(f"CUDA Error: {device_info['cuda_error']}")
+                
         except Exception as e:
             self.device_label.config(text="Device: Error")
             logger.warning(f"Failed to get device info: {e}")

@@ -25,32 +25,78 @@ class CLIPEngine:
         self._initialize_model()
     
     def _initialize_model(self):
-        """Initialize CLIP model with automatic device detection"""
+        """Initialize CLIP model with automatic device detection and fallback"""
         try:
-            # Auto-detect device
+            # Determine the best available device
             if self.config.device:
-                self.device = self.config.device
+                # Use explicitly configured device
+                requested_device = self.config.device
+                if requested_device == "cuda" and not torch.cuda.is_available():
+                    logger.warning(f"CUDA requested but not available, falling back to CPU")
+                    self.device = "cpu"
+                else:
+                    self.device = requested_device
             else:
-                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+                # Auto-detect best device
+                if torch.cuda.is_available():
+                    # Verify CUDA actually works
+                    try:
+                        torch.cuda.current_device()
+                        test_tensor = torch.tensor([1.0]).cuda()
+                        self.device = "cuda"
+                        logger.info("CUDA verification successful")
+                    except Exception as e:
+                        logger.warning(f"CUDA available but verification failed: {e}")
+                        self.device = "cpu"
+                else:
+                    self.device = "cpu"
             
             logger.info(f"Loading CLIP model '{self.config.model_name}' on device: {self.device}")
             
             # Load model and preprocessing
             self.model, self.preprocess = clip.load(self.config.model_name, device=self.device)
             
-            # Log GPU information if available
+            # Log device information
             if self.device == "cuda":
-                gpu_name = torch.cuda.get_device_name(0)
-                gpu_memory = torch.cuda.get_device_properties(0).total_memory // 1024**3
-                logger.info(f"Using GPU: {gpu_name} ({gpu_memory}GB VRAM)")
+                try:
+                    gpu_name = torch.cuda.get_device_name(0)
+                    gpu_props = torch.cuda.get_device_properties(0)
+                    gpu_memory_gb = gpu_props.total_memory // 1024**3
+                    gpu_compute = f"{gpu_props.major}.{gpu_props.minor}"
+                    
+                    logger.info(f"🚀 Using GPU: {gpu_name}")
+                    logger.info(f"   - Total VRAM: {gpu_memory_gb}GB")
+                    logger.info(f"   - Compute Capability: {gpu_compute}")
+                    logger.info(f"   - PyTorch CUDA version: {torch.version.cuda}")
+                    
+                    # Log current memory usage
+                    torch.cuda.empty_cache()  # Clear cache for accurate reading
+                    allocated = torch.cuda.memory_allocated(0) // 1024**2
+                    cached = torch.cuda.memory_reserved(0) // 1024**2
+                    logger.info(f"   - Memory allocated: {allocated}MB, reserved: {cached}MB")
+                    
+                except Exception as e:
+                    logger.warning(f"Could not get detailed GPU info: {e}")
+                    logger.info("Using CUDA for CLIP processing")
             else:
-                logger.info("Using CPU for CLIP processing")
+                logger.info("💻 Using CPU for CLIP processing")
                 
             logger.info("CLIP model loaded successfully")
             
         except Exception as e:
             logger.error(f"Failed to initialize CLIP model: {e}")
-            raise
+            # Try fallback to CPU if CUDA failed
+            if self.device == "cuda":
+                logger.info("Attempting fallback to CPU...")
+                try:
+                    self.device = "cpu"
+                    self.model, self.preprocess = clip.load(self.config.model_name, device=self.device)
+                    logger.info("Successfully fell back to CPU")
+                except Exception as cpu_error:
+                    logger.error(f"CPU fallback also failed: {cpu_error}")
+                    raise
+            else:
+                raise
     
     def encode_image(self, image: Union[str, Path, Image.Image]) -> np.ndarray:
         """
@@ -175,18 +221,42 @@ class CLIPEngine:
         return self.device == "cuda"
     
     def get_device_info(self) -> dict:
-        """Get information about the current device"""
+        """Get comprehensive information about the current device"""
         info = {
             'device': self.device,
             'model_name': self.config.model_name,
             'gpu_available': torch.cuda.is_available()
         }
         
-        if self.device == "cuda":
+        if torch.cuda.is_available():
+            try:
+                info.update({
+                    'gpu_count': torch.cuda.device_count(),
+                    'gpu_name': torch.cuda.get_device_name(0),
+                    'gpu_memory_gb': torch.cuda.get_device_properties(0).total_memory // 1024**3,
+                    'gpu_memory_allocated_mb': torch.cuda.memory_allocated(0) // 1024**2,
+                    'gpu_memory_reserved_mb': torch.cuda.memory_reserved(0) // 1024**2,
+                    'cuda_version': torch.version.cuda,
+                    'compute_capability': f"{torch.cuda.get_device_properties(0).major}.{torch.cuda.get_device_properties(0).minor}"
+                })
+                
+                # Check if we're actually using CUDA
+                info['using_cuda'] = self.device == "cuda"
+                
+                if self.device != "cuda":
+                    info['cuda_status'] = "Available but not used (check configuration or fallback occurred)"
+                else:
+                    info['cuda_status'] = "Active"
+                    
+            except Exception as e:
+                info.update({
+                    'cuda_error': str(e),
+                    'cuda_status': "Error retrieving info"
+                })
+        else:
             info.update({
-                'gpu_name': torch.cuda.get_device_name(0),
-                'gpu_memory_gb': torch.cuda.get_device_properties(0).total_memory // 1024**3,
-                'gpu_memory_allocated_mb': torch.cuda.memory_allocated(0) // 1024**2
+                'cuda_status': "Not available",
+                'using_cuda': False
             })
         
         return info 

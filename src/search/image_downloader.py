@@ -4,25 +4,40 @@ Image downloading functionality with error handling for Discord CDN URLs.
 
 import requests
 import logging
-from typing import Optional
+from typing import Optional, List, Tuple
 from PIL import Image
 from io import BytesIO
 import time
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 logger = logging.getLogger(__name__)
 
 class ImageDownloader:
     """Handles downloading images from URLs with proper error handling"""
     
-    def __init__(self, timeout: int = 10, max_retries: int = 3):
+    def __init__(self, timeout: int = 10, max_retries: int = 3, max_workers: int = 8):
         self.timeout = timeout
         self.max_retries = max_retries
+        self.max_workers = max_workers
         self.session = requests.Session()
         
         # Set a reasonable user agent
         self.session.headers.update({
             'User-Agent': 'ReverseArchiveSearch/1.0 (Educational/Research)'
         })
+        
+        # Thread-local storage for per-thread sessions
+        self._local = threading.local()
+    
+    def _get_session(self) -> requests.Session:
+        """Get or create a session for the current thread"""
+        if not hasattr(self._local, 'session'):
+            self._local.session = requests.Session()
+            self._local.session.headers.update({
+                'User-Agent': 'ReverseArchiveSearch/1.0 (Educational/Research)'
+            })
+        return self._local.session
     
     def download_image(self, url: str) -> Optional[Image.Image]:
         """
@@ -34,6 +49,10 @@ class ImageDownloader:
         Returns:
             PIL Image object or None if download failed
         """
+        return self._download_single_image(url, self._get_session())
+    
+    def _download_single_image(self, url: str, session: requests.Session) -> Optional[Image.Image]:
+        """Internal method to download a single image with a specific session"""
         if not url:
             logger.warning("Empty URL provided")
             return None
@@ -42,7 +61,7 @@ class ImageDownloader:
             try:
                 logger.debug(f"Downloading image (attempt {attempt + 1}/{self.max_retries}): {url}")
                 
-                response = self.session.get(url, timeout=self.timeout, stream=True)
+                response = session.get(url, timeout=self.timeout, stream=True)
                 response.raise_for_status()
                 
                 # Check content type
@@ -101,6 +120,35 @@ class ImageDownloader:
         logger.error(f"Failed to download image after {self.max_retries} attempts: {url}")
         return None
     
+    def download_images_batch(self, urls: List[str]) -> List[Tuple[str, Optional[Image.Image]]]:
+        """
+        Download multiple images concurrently.
+        
+        Args:
+            urls: List of image URLs to download
+            
+        Returns:
+            List of (url, image) tuples where image may be None if download failed
+        """
+        if not urls:
+            return []
+        
+        logger.info(f"Starting concurrent download of {len(urls)} images with {self.max_workers} workers")
+        
+        def download_with_url(url: str) -> Tuple[str, Optional[Image.Image]]:
+            session = self._get_session()
+            image = self._download_single_image(url, session)
+            return (url, image)
+        
+        results = []
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            results = list(executor.map(download_with_url, urls))
+        
+        successful = sum(1 for _, img in results if img is not None)
+        logger.info(f"Batch download complete: {successful}/{len(urls)} successful")
+        
+        return results
+
     def is_valid_image_url(self, url: str) -> bool:
         """
         Check if URL appears to be a valid image URL without downloading.

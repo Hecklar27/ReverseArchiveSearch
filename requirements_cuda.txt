@@ -1,17 +1,10 @@
-# Reverse Archive Search - Dependencies
-# Exact versions tested and verified to work
+# Reverse Archive Search - CUDA Dependencies
+# Exact versions tested and verified to work with NVIDIA RTX 2080 + CUDA 11.8
 
-# === CPU-Only Installation (Default) ===
-# Core ML/AI libraries - CPU versions
-torch==2.0.1
-torchvision==0.15.2
+# === CUDA-Enabled PyTorch ===
+torch==2.0.1+cu118
+torchvision==0.15.2+cu118
 numpy==1.26.4
-
-# === For CUDA Support ===
-# Replace the above with:
-# torch==2.0.1+cu118
-# torchvision==0.15.2+cu118
-# Install with: pip install -r requirements_cuda.txt
 
 # === CLIP Model ===
 # Install separately: pip install git+https://github.com/openai/CLIP.git
@@ -42,10 +35,16 @@ urllib3==2.4.0
 wcwidth==0.2.13
 
 # === Installation Instructions ===
-# CPU-only (works everywhere):
-#   pip install -r requirements.txt
+# Install with CUDA index:
+#   pip install -r requirements_cuda.txt --index-url https://download.pytorch.org/whl/cu118
 #   pip install git+https://github.com/openai/CLIP.git
 #
-# CUDA support (RTX 2080+ recommended):
-#   pip install -r requirements_cuda.txt
-#   pip install git+https://github.com/openai/CLIP.git 
+# Requirements:
+# - NVIDIA GPU (GTX 10 series or newer)
+# - CUDA 11.8 compatible drivers
+# - Windows/Linux compatible
+# 
+# Tested Hardware:
+# - NVIDIA GeForce RTX 2080 (7GB VRAM) ✅
+# - CUDA 11.8 ✅
+# - Windows 10+ ✅

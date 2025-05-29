@@ -21,8 +21,9 @@ class DiscordConfig:
 class CLIPConfig:
     """CLIP model configuration"""
     model_name: str = "ViT-B/32"  # Default CLIP model
-    device: Optional[str] = None  # Auto-detect GPU/CPU
+    device: Optional[str] = None  # Auto-detect GPU/CPU (prefers CUDA if available)
     batch_size: int = 32  # For future batch processing
+    prefer_cuda: bool = True  # Prefer CUDA over CPU when available
 
 @dataclass
 class CacheConfig:

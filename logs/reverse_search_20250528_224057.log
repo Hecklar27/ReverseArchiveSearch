@@ -1,0 +1,19 @@
+2025-05-28 22:40:57 - root - INFO - Logging to file: logs\reverse_search_20250528_224057.log
+2025-05-28 22:40:57 - __main__ - INFO - Starting Reverse Archive Search application
+2025-05-28 22:40:58 - src.search.clip_engine - INFO - CUDA verification successful
+2025-05-28 22:40:58 - src.search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-28 22:41:02 - src.search.clip_engine - INFO - 🚀 Using GPU: NVIDIA GeForce RTX 2080
+2025-05-28 22:41:02 - src.search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-28 22:41:02 - src.search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-28 22:41:02 - src.search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-28 22:41:02 - src.search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-28 22:41:02 - src.search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-28 22:41:02 - src.search.clip_engine - INFO - CUDA verification successful
+2025-05-28 22:41:02 - src.search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-28 22:41:05 - src.search.clip_engine - INFO - 🚀 Using GPU: NVIDIA GeForce RTX 2080
+2025-05-28 22:41:05 - src.search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-28 22:41:05 - src.search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-28 22:41:05 - src.search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-28 22:41:05 - src.search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-28 22:41:05 - src.search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-28 22:41:05 - src.gui.main_window - INFO - Device Status: Active
