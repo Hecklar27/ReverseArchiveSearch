@@ -63,6 +63,9 @@ class Config:
     discord: DiscordConfig = field(default_factory=DiscordConfig)
     cache: CacheConfig = field(default_factory=CacheConfig)
     
+    # Data sources
+    discord_archive_path: str = "mapart-archive.html"  # Changed from JSON to HTML
+    
     @classmethod
     def load_default(cls) -> 'Config':
         """Load default configuration"""
@@ -88,3 +91,7 @@ def setup_logging(level: str = "INFO") -> None:
             logging.FileHandler('reverse_archive_search.log')
         ]
     ) 
+
+# Data sources
+discord_archive_path: str = "mapart-archive.html"  # Changed from JSON to HTML
+cache_dir: str = "cache" 

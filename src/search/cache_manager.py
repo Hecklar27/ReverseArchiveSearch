@@ -12,8 +12,8 @@ from typing import List, Dict, Optional, Tuple, Any
 from pathlib import Path
 from datetime import datetime, timedelta
 
-from ..data.models import DiscordMessage, DiscordAttachment
-from ..core.config import Config
+from data.models import DiscordMessage, DiscordAttachment
+from core.config import Config
 from .clip_engine import CLIPEngine
 from .image_downloader import ImageDownloader
 

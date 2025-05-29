@@ -5,7 +5,7 @@
 2. Install dependencies: `python setup.py`
 3. Run: `python main.py`
 4. Select your query image
-5. Select Discord JSON export file
+5. Select Discord HTML export file (NEEDS TO BE EXPORTED DAILY USING DISCORDCHATEXPORTER)
 6. **Important**: Click "Pre-process Archive" to build cache (one-time setup)
 7. Click "Cached Search" for lightning-fast results!
 
@@ -17,7 +17,7 @@
 The cache system provides 10-60x performance improvement by pre-computing CLIP embeddings.
 
 ### First Time Setup
-1. Load your Discord JSON file (This takes all day to export using DiscorcChatExporter, I have provided one which goes up to 5/29/25)
+1. Load your Discord HTML file (Use DiscordChatExporter to export this daily as links expire in 24 hours, takes a few minutes)
 2. Click "Pre-process Archive" - this will:
    - Download all images from Discord
    - Generate CLIP embeddings for each image

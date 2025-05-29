@@ -12,8 +12,8 @@ from pathlib import Path
 from PIL import Image
 from io import BytesIO
 
-from ..data.models import DiscordMessage, SearchResult, ProcessingStats, DiscordAttachment
-from ..core.config import Config
+from data.models import DiscordMessage, SearchResult, ProcessingStats, DiscordAttachment
+from core.config import Config
 from .clip_engine import CLIPEngine
 from .image_downloader import ImageDownloader
 from .cache_manager import EmbeddingCacheManager

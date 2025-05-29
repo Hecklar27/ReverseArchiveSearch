@@ -8274,3 +8274,879 @@
 2025-05-29 14:38:26,102 - src.data.discord_parser - INFO - Statistics: {'total_messages': 3688, 'messages_with_attachments': 3462, 'total_attachments': 3561, 'parse_errors': 0}
 2025-05-29 14:38:26,138 - src.gui.main_window - INFO - Loaded 3462 Discord messages
 2025-05-29 14:38:26,139 - src.gui.main_window - INFO - Successfully parsed 3462 Discord messages
+2025-05-29 15:08:53,291 - data.discord_parser - INFO - Parsing Discord HTML archive: mapart-archive.html
+2025-05-29 15:08:53,291 - data.html_parser - INFO - Parsing HTML file: mapart-archive.html
+2025-05-29 15:10:10,563 - data.discord_parser - INFO - Parsing Discord HTML archive: mapart-archive.html
+2025-05-29 15:10:10,563 - data.html_parser - INFO - Parsing HTML file: mapart-archive.html
+2025-05-29 15:10:20,004 - data.html_parser - INFO - Found 3690 message containers
+2025-05-29 15:10:20,831 - data.html_parser - INFO - Successfully parsed 3464 messages with attachments
+2025-05-29 15:10:20,835 - data.discord_parser - INFO - Loaded 3464 messages with image attachments
+2025-05-29 15:10:21,091 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:10:21,091 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:10:25,482 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:10:25,482 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:10:25,483 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:10:25,483 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:10:25,484 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:10:25,484 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:10:25,486 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:10:25,486 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:10:29,619 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:10:29,619 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:10:29,619 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:10:29,620 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:10:29,620 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:10:29,620 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:10:29,621 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:10:29,621 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:10:32,760 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:10:32,760 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:10:32,761 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:10:32,761 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:10:32,762 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:10:32,762 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:10:32,763 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:10:32,763 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:10:43,217 - data.discord_parser - INFO - Parsing Discord HTML archive: mapart-archive.html
+2025-05-29 15:10:43,218 - data.html_parser - INFO - Parsing HTML file: mapart-archive.html
+2025-05-29 15:11:40,722 - __main__ - INFO - Starting Reverse Archive Search with FRESH HTML URLs!
+2025-05-29 15:11:40,723 - __main__ - INFO - Found HTML archive: mapart-archive.html
+2025-05-29 15:11:40,723 - __main__ - INFO - Parsing Discord HTML data...
+2025-05-29 15:11:40,723 - data.discord_parser - INFO - Parsing Discord HTML archive: mapart-archive.html
+2025-05-29 15:11:40,723 - data.html_parser - INFO - Parsing HTML file: mapart-archive.html
+2025-05-29 15:11:56,666 - data.html_parser - INFO - Found 3690 message containers
+2025-05-29 15:11:57,445 - data.html_parser - INFO - Successfully parsed 3464 messages with attachments
+2025-05-29 15:11:57,449 - data.discord_parser - INFO - Loaded 3464 messages with image attachments
+2025-05-29 15:11:57,676 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:11:57,676 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:12:01,461 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:12:01,462 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:12:01,462 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:12:01,462 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:12:01,463 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:12:01,464 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:12:01,464 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:12:01,464 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:12:04,604 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:12:04,604 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:12:04,605 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:12:04,605 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:12:04,605 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:12:04,606 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:12:04,607 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:12:04,607 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:12:09,389 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:12:09,390 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:12:09,390 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:12:09,390 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:12:09,391 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:12:09,391 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:12:09,393 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:12:09,393 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:12:13,973 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:12:13,974 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:12:13,974 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:12:13,975 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:12:13,976 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:12:13,976 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:12:13,978 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:12:13,979 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:12:17,572 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:12:17,573 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:12:17,573 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:12:17,573 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:12:17,574 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:12:17,574 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:12:17,616 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:12:17,617 - gui.main_window - INFO - Loaded 3464 Discord messages
+2025-05-29 15:12:17,617 - gui.main_window - INFO - Successfully parsed 3464 Discord messages
+2025-05-29 15:12:52,295 - data.html_parser - INFO - Found 3690 message containers
+2025-05-29 15:12:53,002 - data.html_parser - INFO - Successfully parsed 3464 messages with attachments
+2025-05-29 15:12:53,005 - data.discord_parser - INFO - Loaded 3464 messages with image attachments
+2025-05-29 15:12:53,005 - __main__ - INFO - Found 3464 messages with images
+2025-05-29 15:12:53,191 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:12:53,191 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:12:56,361 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:12:56,361 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:12:56,361 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:12:56,361 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:12:56,361 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:12:56,362 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:12:56,362 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:12:56,362 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:13:01,071 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:13:01,072 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:13:01,072 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:13:01,072 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:13:01,072 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:13:01,073 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:13:01,073 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:13:01,074 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:13:04,393 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:13:04,393 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:13:04,393 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:13:04,394 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:13:04,394 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:13:04,394 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:13:04,395 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:13:04,395 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:13:07,785 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:13:07,786 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:13:07,786 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:13:07,786 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:13:07,786 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:13:07,787 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:13:07,788 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:13:07,788 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:13:12,208 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:13:12,209 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:13:12,209 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:13:12,209 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:13:12,210 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:13:12,210 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:13:12,233 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:13:12,235 - gui.main_window - INFO - Loaded 3464 Discord messages
+2025-05-29 15:13:12,235 - gui.main_window - INFO - Successfully parsed 3464 Discord messages
+2025-05-29 15:13:12,236 - __main__ - INFO - Launching search interface...
+2025-05-29 15:13:41,123 - gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:13:54,390 - gui.main_window - INFO - Selected Discord JSON: C:\Users\Aliba\Desktop\ReverseArchiveSearch\map-archive.json
+2025-05-29 15:13:54,393 - gui.main_window - INFO - Parsing Discord JSON...
+2025-05-29 15:13:54,393 - gui.main_window - ERROR - Failed to parse Discord JSON: 'NoneType' object has no attribute 'parse_file'
+2025-05-29 15:13:55,005 - search.cache_manager - INFO - Building embedding cache for 3464 messages
+2025-05-29 15:13:55,020 - search.cache_manager - INFO - Found 3564 images to process
+2025-05-29 15:13:55,025 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:13:55,586 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:13:56,788 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:13:57,242 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:13:57,734 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:13:58,068 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:13:58,557 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:13:59,016 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:13:59,443 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:13:59,874 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:00,238 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:00,756 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:01,229 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:01,635 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:02,151 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:02,680 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:03,538 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:03,960 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:04,448 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:04,955 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:05,441 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:05,881 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:06,284 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:06,673 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:07,174 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:07,577 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:08,311 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:08,714 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:09,377 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:09,765 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:10,706 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:11,102 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:11,807 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:12,224 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:12,714 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:13,155 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:14,314 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:14,770 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:15,358 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:15,744 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:16,230 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:16,636 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:17,087 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:17,487 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:17,832 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:18,292 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:18,832 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:19,301 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:19,761 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:20,167 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:20,667 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:21,101 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:21,575 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:21,950 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:22,325 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:22,765 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:23,227 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:23,599 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:23,788 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:24,680 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:25,007 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:25,454 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:25,918 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:26,307 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:26,869 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:27,263 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:27,759 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:28,158 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:28,869 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:29,280 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:29,835 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:30,411 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:30,931 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:31,334 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:32,034 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:32,521 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:33,186 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:33,582 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:34,081 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:34,571 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:35,213 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:35,710 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:36,480 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:36,975 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:38,828 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:39,374 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:46,532 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:47,171 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:50,246 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:50,741 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:51,536 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:52,027 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:53,356 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:54,373 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:56,376 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:56,958 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:57,814 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:58,336 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:14:59,038 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:14:59,451 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:00,111 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:00,638 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:01,414 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:01,923 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:02,825 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:03,409 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:04,175 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:04,615 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:05,481 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:05,962 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:06,865 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:07,444 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:08,754 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:09,464 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:11,017 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:11,455 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:12,130 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:12,497 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:13,312 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:13,705 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:14,609 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:15,156 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:16,105 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:16,749 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:18,387 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:19,097 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:20,302 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:20,869 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:22,177 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:22,668 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:23,628 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:24,028 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:24,967 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:25,852 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:29,043 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:29,497 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:30,467 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:31,159 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:32,322 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:33,102 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:34,494 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:35,023 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:36,192 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:36,765 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:37,843 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:38,382 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:39,486 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:39,969 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:40,598 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:41,005 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:41,462 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:41,865 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:42,672 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:43,303 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:44,364 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:44,912 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:45,560 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:46,106 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:47,263 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:47,721 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:48,620 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:49,074 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:49,873 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:50,342 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:51,042 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:51,641 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:52,730 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:53,231 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:54,387 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:54,820 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:55,496 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:55,915 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:56,514 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:56,966 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:57,541 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:57,953 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:58,378 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:15:58,831 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:15:59,575 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:00,058 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:00,637 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:01,056 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:01,792 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:02,465 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:03,493 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:04,142 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:05,490 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:06,002 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:06,820 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:07,409 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:07,982 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:08,536 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:09,506 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:10,126 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:10,811 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:11,399 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:12,401 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:13,004 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:13,832 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:14,358 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:15,580 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:16,065 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:16,855 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:17,326 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:18,264 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:18,805 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:19,955 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:20,508 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:21,539 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:22,014 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:22,611 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:23,475 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:24,188 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:24,716 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:25,497 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:25,993 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:26,708 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:27,183 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:28,040 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:28,528 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:29,325 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:16:29,823 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:16:30,503 - search.image_downloader - INFO - Starting concurrent download of 12 images with 8 workers
+2025-05-29 15:16:30,824 - search.image_downloader - INFO - Batch download complete: 12/12 successful
+2025-05-29 15:16:31,221 - search.cache_manager - INFO - Cache built successfully in 156.22s
+2025-05-29 15:16:31,223 - search.cache_manager - INFO - Cached 3564 embeddings from 3564 images
+2025-05-29 15:16:46,652 - search.strategies - INFO - Using cached search strategy
+2025-05-29 15:16:46,652 - search.strategies - INFO - Starting cached search with pre-computed embeddings
+2025-05-29 15:16:46,693 - search.cache_manager - INFO - Loaded cache with 3564 embeddings
+2025-05-29 15:16:46,694 - search.strategies - INFO - Successfully loaded cache with 3564 embeddings
+2025-05-29 15:16:46,694 - search.strategies - INFO - Encoding user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:16:46,757 - search.strategies - INFO - User image encoded successfully
+2025-05-29 15:16:46,758 - search.strategies - INFO - Calculating similarities with cached embeddings...
+2025-05-29 15:16:46,865 - search.strategies - INFO - Calculated similarities for 3564 cached embeddings
+2025-05-29 15:16:46,884 - search.strategies - INFO - Cached search completed in 0.23s
+2025-05-29 15:16:46,885 - search.strategies - INFO - Processed 3564 cached embeddings
+2025-05-29 15:16:46,885 - search.strategies - INFO - Found 20 results
+2025-05-29 15:16:46,887 - gui.main_window - INFO - Processed 3564/3564 images (100.0% success) in 0.2s
+2025-05-29 15:16:46,887 - gui.main_window - INFO - Search complete - found 20 results in 0.2s
+2025-05-29 15:16:53,860 - gui.main_window - INFO - Opened Discord link: https://discord.com/channels/349201680023289867/349277718954901514/1362412141600047186
+2025-05-29 15:21:31,226 - __main__ - INFO - Starting Reverse Archive Search with HTML File Selection!
+2025-05-29 15:21:31,454 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:21:31,454 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:21:36,144 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:21:36,144 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:21:36,144 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:21:36,144 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:21:36,145 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:21:36,145 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:21:36,146 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:21:36,146 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:21:42,278 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:21:42,278 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:21:42,279 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:21:42,279 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:21:42,281 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:21:42,281 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:21:42,282 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:21:42,282 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:21:47,879 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:21:47,881 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:21:47,881 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:21:47,881 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:21:47,882 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:21:47,882 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:21:47,884 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:21:47,884 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:21:51,548 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:21:51,549 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:21:51,549 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:21:51,549 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:21:51,550 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:21:51,550 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:21:51,552 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:21:51,552 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:21:54,491 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:21:54,491 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:21:54,492 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:21:54,492 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:21:54,493 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:21:54,493 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:21:54,528 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:21:54,599 - search.cache_manager - INFO - Loaded cache with 3564 embeddings
+2025-05-29 15:21:54,615 - __main__ - INFO - Launching search interface...
+2025-05-29 15:22:42,660 - gui.main_window - INFO - Selected HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:22:42,665 - gui.main_window - INFO - Parsing HTML archive...
+2025-05-29 15:22:42,667 - data.discord_parser - INFO - Parsing Discord HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:22:42,668 - data.html_parser - INFO - Parsing HTML file: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:22:47,634 - gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:22:57,015 - gui.main_window - ERROR - Please load Discord JSON file first
+2025-05-29 15:22:58,588 - search.cache_manager - INFO - Cache cleared successfully
+2025-05-29 15:23:28,357 - __main__ - INFO - Starting Reverse Archive Search with HTML File Selection!
+2025-05-29 15:23:28,550 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:23:28,550 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:23:32,093 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:23:32,094 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:23:32,094 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:23:32,094 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:23:32,095 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:23:32,095 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:23:32,096 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:23:32,096 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:23:35,821 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:23:35,821 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:23:35,822 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:23:35,822 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:23:35,822 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:23:35,822 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:23:35,823 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:23:35,824 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:23:39,270 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:23:39,270 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:23:39,271 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:23:39,271 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:23:39,271 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:23:39,271 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:23:39,272 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:23:39,272 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:23:42,423 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:23:42,423 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:23:42,423 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:23:42,424 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:23:42,424 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:23:42,424 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:23:42,425 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:23:42,425 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:23:45,403 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:23:45,404 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:23:45,404 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:23:45,404 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:23:45,405 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:23:45,405 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:23:45,435 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:23:45,436 - __main__ - INFO - Launching search interface...
+2025-05-29 15:24:44,818 - gui.main_window - INFO - Selected HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:24:44,819 - gui.main_window - INFO - Parsing HTML archive...
+2025-05-29 15:24:44,820 - data.discord_parser - INFO - Parsing Discord HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:24:44,820 - data.html_parser - INFO - Parsing HTML file: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:24:49,226 - gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:25:29,799 - __main__ - INFO - Application stopped by user
+2025-05-29 15:25:48,023 - __main__ - INFO - Starting Reverse Archive Search with HTML File Selection!
+2025-05-29 15:25:48,225 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:25:48,225 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:25:51,685 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:25:51,685 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:25:51,685 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:25:51,686 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:25:51,686 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:25:51,687 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:25:51,687 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:25:51,687 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:25:54,584 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:25:54,585 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:25:54,585 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:25:54,585 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:25:54,586 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:25:54,586 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:25:54,587 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:25:54,587 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:25:57,249 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:25:57,250 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:25:57,250 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:25:57,250 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:25:57,251 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:25:57,251 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:25:57,251 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:25:57,252 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:26:00,035 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:26:00,035 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:26:00,035 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:26:00,035 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:26:00,036 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:26:00,036 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:26:00,037 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:26:00,037 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:26:02,820 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:26:02,820 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:26:02,821 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:26:02,821 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:26:02,822 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:26:02,822 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:26:02,840 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:26:02,840 - __main__ - INFO - Launching search interface...
+2025-05-29 15:26:11,462 - gui.main_window - INFO - Selected HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:26:11,464 - gui.main_window - INFO - Parsing HTML archive...
+2025-05-29 15:26:11,465 - data.discord_parser - INFO - Parsing Discord HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:26:11,466 - data.html_parser - INFO - Parsing HTML file: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:26:17,092 - gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:27:19,387 - data.html_parser - INFO - Found 3690 message containers
+2025-05-29 15:27:20,692 - data.html_parser - INFO - Successfully parsed 3464 messages with attachments
+2025-05-29 15:27:20,696 - data.discord_parser - INFO - Loaded 3464 messages with image attachments
+2025-05-29 15:27:20,697 - gui.main_window - INFO - Loaded 3464 Discord messages from HTML
+2025-05-29 15:27:20,697 - gui.main_window - INFO - Successfully parsed 3464 Discord messages from HTML archive
+2025-05-29 15:29:11,294 - __main__ - INFO - Starting Reverse Archive Search with HTML File Selection!
+2025-05-29 15:29:11,481 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:29:11,482 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:29:15,489 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:29:15,490 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:29:15,490 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:29:15,490 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:29:15,491 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:29:15,491 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:29:15,492 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:29:15,492 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:29:21,203 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:29:21,203 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:29:21,203 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:29:21,204 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:29:21,204 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:29:21,204 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:29:21,206 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:29:21,207 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:29:24,394 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:29:24,394 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:29:24,394 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:29:24,395 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:29:24,395 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:29:24,395 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:29:24,396 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:29:24,396 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:29:27,854 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:29:27,855 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:29:27,855 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:29:27,855 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:29:27,856 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:29:27,857 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:29:27,858 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:29:27,859 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:29:30,948 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:29:30,948 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:29:30,948 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:29:30,948 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:29:30,949 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:29:30,949 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:29:30,973 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:29:30,974 - __main__ - INFO - Launching search interface...
+2025-05-29 15:30:59,721 - gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:31:04,581 - gui.main_window - INFO - Selected HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:31:04,584 - gui.main_window - INFO - Parsing HTML archive...
+2025-05-29 15:31:04,585 - data.discord_parser - INFO - Parsing Discord HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:31:04,585 - data.html_parser - INFO - Parsing HTML file: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:33:06,116 - __main__ - INFO - Starting Reverse Archive Search with HTML File Selection!
+2025-05-29 15:33:06,329 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:33:06,330 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:33:10,499 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:33:10,500 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:33:10,500 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:33:10,500 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:33:10,501 - search.clip_engine - INFO -    - Memory allocated: 344MB, reserved: 368MB
+2025-05-29 15:33:10,501 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:33:10,503 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:33:10,503 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:33:15,503 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:33:15,504 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:33:15,504 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:33:15,504 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:33:15,505 - search.clip_engine - INFO -    - Memory allocated: 689MB, reserved: 694MB
+2025-05-29 15:33:15,506 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:33:15,508 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:33:15,508 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:33:19,751 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:33:19,752 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:33:19,752 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:33:19,753 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:33:19,754 - search.clip_engine - INFO -    - Memory allocated: 1035MB, reserved: 1040MB
+2025-05-29 15:33:19,755 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:33:19,755 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:33:19,756 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:33:24,860 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:33:24,860 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:33:24,862 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:33:24,862 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:33:24,862 - search.clip_engine - INFO -    - Memory allocated: 1381MB, reserved: 1386MB
+2025-05-29 15:33:24,863 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:33:24,863 - search.clip_engine - INFO - CUDA verification successful
+2025-05-29 15:33:24,864 - search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cuda
+2025-05-29 15:33:29,109 - search.clip_engine - INFO - Using GPU: NVIDIA GeForce RTX 2080
+2025-05-29 15:33:29,109 - search.clip_engine - INFO -    - Total VRAM: 7GB
+2025-05-29 15:33:29,109 - search.clip_engine - INFO -    - Compute Capability: 7.5
+2025-05-29 15:33:29,109 - search.clip_engine - INFO -    - PyTorch CUDA version: 11.8
+2025-05-29 15:33:29,110 - search.clip_engine - INFO -    - Memory allocated: 1727MB, reserved: 1732MB
+2025-05-29 15:33:29,110 - search.clip_engine - INFO - CLIP model loaded successfully
+2025-05-29 15:33:29,142 - gui.main_window - INFO - Device Status: Active
+2025-05-29 15:33:29,143 - __main__ - INFO - Launching search interface...
+2025-05-29 15:33:34,773 - gui.main_window - INFO - Selected HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:33:34,774 - gui.main_window - INFO - Parsing HTML archive...
+2025-05-29 15:33:34,775 - data.discord_parser - INFO - Parsing Discord HTML archive: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:33:34,775 - data.html_parser - INFO - Parsing HTML file: C:\Users\Aliba\Desktop\ReverseArchiveSearch\mapart-archive.html
+2025-05-29 15:33:44,902 - gui.main_window - INFO - Selected user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:33:49,882 - gui.main_window - ERROR - Please select and load an HTML archive file
+2025-05-29 15:34:29,418 - data.html_parser - INFO - Found 3690 message containers
+2025-05-29 15:34:30,457 - data.html_parser - INFO - Successfully parsed 3464 messages with attachments
+2025-05-29 15:34:30,460 - data.discord_parser - INFO - Loaded 3464 messages with image attachments
+2025-05-29 15:34:30,461 - gui.main_window - INFO - Loaded 3464 Discord messages from HTML
+2025-05-29 15:34:30,461 - gui.main_window - INFO - Successfully parsed 3464 Discord messages from HTML archive
+2025-05-29 15:34:52,236 - search.cache_manager - INFO - Building embedding cache for 3464 messages
+2025-05-29 15:34:52,243 - search.cache_manager - INFO - Found 3564 images to process
+2025-05-29 15:34:52,246 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:52,670 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:53,798 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:54,182 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:54,672 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:55,082 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:55,621 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:56,045 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:56,525 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:56,965 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:57,314 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:57,733 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:58,158 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:58,556 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:34:59,040 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:34:59,512 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:00,355 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:00,825 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:01,314 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:01,828 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:02,309 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:02,739 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:03,061 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:03,545 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:03,996 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:04,395 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:05,015 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:05,420 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:06,050 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:06,514 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:07,507 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:07,918 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:08,631 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:09,049 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:09,591 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:10,038 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:11,204 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:11,639 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:12,233 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:12,656 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:13,165 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:13,599 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:14,064 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:14,462 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:14,830 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:15,252 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:15,857 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:16,492 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:17,006 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:17,438 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:17,932 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:18,339 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:18,777 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:19,139 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:19,483 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:19,920 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:20,385 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:20,787 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:21,022 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:21,402 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:21,753 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:22,202 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:22,705 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:23,122 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:23,704 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:24,116 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:24,624 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:25,012 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:25,696 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:26,082 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:26,639 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:27,041 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:27,521 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:27,923 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:28,608 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:29,080 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:29,772 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:30,173 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:30,731 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:31,194 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:31,890 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:32,373 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:33,161 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:33,641 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:35,627 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:36,166 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:43,096 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:43,580 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:46,791 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:47,674 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:48,493 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:49,425 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:50,675 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:51,926 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:54,080 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:54,741 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:55,612 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:56,308 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:56,982 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:57,426 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:58,068 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:58,493 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:35:59,335 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:35:59,794 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:00,711 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:01,205 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:02,066 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:02,545 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:03,384 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:03,894 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:04,765 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:05,335 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:06,647 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:07,298 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:08,895 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:09,390 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:10,054 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:10,419 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:11,274 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:11,650 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:12,567 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:13,067 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:14,035 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:14,637 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:16,409 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:17,045 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:18,356 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:18,931 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:20,159 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:20,646 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:21,635 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:22,092 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:22,996 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:23,858 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:27,084 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:27,535 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:28,509 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:28,979 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:30,123 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:31,303 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:32,768 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:33,277 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:34,464 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:34,958 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:35,978 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:36,498 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:37,583 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:38,035 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:38,669 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:39,078 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:39,526 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:39,915 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:40,704 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:41,182 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:42,259 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:42,745 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:43,403 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:43,896 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:45,088 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:45,576 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:46,465 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:46,917 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:47,730 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:48,148 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:48,875 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:49,443 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:50,483 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:50,993 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:52,187 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:52,639 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:53,311 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:53,758 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:54,377 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:54,817 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:55,380 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:55,843 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:56,245 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:56,666 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:57,308 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:57,730 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:58,302 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:36:58,714 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:36:59,425 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:00,018 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:00,980 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:01,448 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:02,742 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:03,249 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:03,979 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:04,622 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:05,189 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:05,736 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:06,769 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:07,228 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:07,918 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:08,539 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:09,565 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:10,106 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:10,865 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:11,393 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:12,590 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:13,054 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:13,822 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:14,287 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:15,220 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:15,748 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:16,837 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:17,329 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:18,341 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:18,873 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:19,502 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:20,457 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:21,144 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:21,648 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:22,461 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:22,925 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:23,631 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:24,117 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:24,999 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:25,444 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:26,261 - search.image_downloader - INFO - Starting concurrent download of 32 images with 8 workers
+2025-05-29 15:37:26,716 - search.image_downloader - INFO - Batch download complete: 32/32 successful
+2025-05-29 15:37:27,415 - search.image_downloader - INFO - Starting concurrent download of 12 images with 8 workers
+2025-05-29 15:37:27,661 - search.image_downloader - INFO - Batch download complete: 12/12 successful
+2025-05-29 15:37:28,887 - search.cache_manager - INFO - Cache built successfully in 156.65s
+2025-05-29 15:37:28,887 - search.cache_manager - INFO - Cached 3564 embeddings from 3564 images
+2025-05-29 15:37:32,611 - search.strategies - INFO - Using cached search strategy
+2025-05-29 15:37:32,612 - search.strategies - INFO - Starting cached search with pre-computed embeddings
+2025-05-29 15:37:32,658 - search.cache_manager - INFO - Loaded cache with 3564 embeddings
+2025-05-29 15:37:32,659 - search.strategies - INFO - Successfully loaded cache with 3564 embeddings
+2025-05-29 15:37:32,659 - search.strategies - INFO - Encoding user image: C:\Users\Aliba\Desktop\2025-04-16_19.png
+2025-05-29 15:37:32,760 - search.strategies - INFO - User image encoded successfully
+2025-05-29 15:37:32,761 - search.strategies - INFO - Calculating similarities with cached embeddings...
+2025-05-29 15:37:32,831 - search.strategies - INFO - Calculated similarities for 3564 cached embeddings
+2025-05-29 15:37:32,849 - search.strategies - INFO - Cached search completed in 0.24s
+2025-05-29 15:37:32,849 - search.strategies - INFO - Processed 3564 cached embeddings
+2025-05-29 15:37:32,850 - search.strategies - INFO - Found 20 results
+2025-05-29 15:37:32,852 - gui.main_window - INFO - Processed 3564/3564 images (100.0% success) in 0.2s
+2025-05-29 15:37:32,853 - gui.main_window - INFO - Search complete - found 20 results in 0.2s

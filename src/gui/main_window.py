@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Optional, List
 import threading
 
-from ..core.config import Config
-from ..data.discord_parser import DiscordParser
-from ..data.models import DiscordMessage, SearchResult, ProcessingStats
-from ..search.strategies import SearchEngine
+from core.config import Config
+from data.discord_parser import DiscordParser
+from data.models import DiscordMessage, SearchResult, ProcessingStats
+from search.strategies import SearchEngine
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +23,14 @@ class MainWindow:
     def __init__(self, root: tk.Tk, config: Config):
         self.root = root
         self.config = config
-        self.discord_parser = DiscordParser()
+        self.discord_parser = None  # Will be initialized when needed
         self.search_engine = SearchEngine(config)
         
         # State variables
         self.discord_messages: List[DiscordMessage] = []
         self.current_results: List[SearchResult] = []
         self.user_image_path: Optional[Path] = None
-        self.discord_json_path: Optional[Path] = None
+        self.html_archive_path: Optional[Path] = None
         
         self._setup_window()
         self._create_widgets()
@@ -66,12 +66,12 @@ class MainWindow:
         ttk.Button(self.control_frame, text="Browse", 
                   command=self._browse_user_image).grid(row=0, column=2, padx=(5, 0), pady=2)
         
-        ttk.Label(self.control_frame, text="Discord JSON:").grid(row=1, column=0, sticky=tk.W, pady=2)
-        self.json_file_var = tk.StringVar()
-        self.json_file_entry = ttk.Entry(self.control_frame, textvariable=self.json_file_var, width=50)
-        self.json_file_entry.grid(row=1, column=1, padx=(5, 0), pady=2, sticky=tk.EW)
+        ttk.Label(self.control_frame, text="HTML Archive:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        self.html_file_var = tk.StringVar()
+        self.html_file_entry = ttk.Entry(self.control_frame, textvariable=self.html_file_var, width=50)
+        self.html_file_entry.grid(row=1, column=1, padx=(5, 0), pady=2, sticky=tk.EW)
         ttk.Button(self.control_frame, text="Browse", 
-                  command=self._browse_discord_json).grid(row=1, column=2, padx=(5, 0), pady=2)
+                  command=self._browse_html_archive).grid(row=1, column=2, padx=(5, 0), pady=2)
         
         # Search Controls
         search_frame = ttk.Frame(self.control_frame)
@@ -244,49 +244,52 @@ class MainWindow:
             self.user_image_var.set(str(self.user_image_path))
             logger.info(f"Selected user image: {self.user_image_path}")
     
-    def _browse_discord_json(self):
-        """Open file dialog to select Discord JSON file"""
+    def _browse_html_archive(self):
+        """Open file dialog to select HTML archive"""
         filetypes = [
-            ('JSON files', '*.json'),
+            ('HTML files', '*.html'),
             ('All files', '*.*')
         ]
         
         filename = filedialog.askopenfilename(
-            title="Select Discord JSON Export",
+            title="Select HTML Archive",
             filetypes=filetypes
         )
         
         if filename:
-            self.discord_json_path = Path(filename)
-            self.json_file_var.set(str(self.discord_json_path))
-            logger.info(f"Selected Discord JSON: {self.discord_json_path}")
+            self.html_archive_path = Path(filename)
+            self.html_file_var.set(str(self.html_archive_path))
+            logger.info(f"Selected HTML archive: {self.html_archive_path}")
             
-            # Parse Discord JSON in background
-            self._parse_discord_json()
+            # Parse HTML archive in background
+            self._parse_html_archive()
     
-    def _parse_discord_json(self):
-        """Parse Discord JSON file in background"""
-        if not self.discord_json_path:
+    def _parse_html_archive(self):
+        """Parse HTML archive file in background"""
+        if not self.html_archive_path:
             return
             
         def parse_worker():
             try:
-                self._update_progress("Parsing Discord JSON...")
-                self.discord_messages = self.discord_parser.parse_file(self.discord_json_path)
+                self._update_progress("Parsing HTML archive...")
+                
+                # Create Discord parser for HTML file
+                self.discord_parser = DiscordParser(str(self.html_archive_path))
+                self.discord_messages = self.discord_parser.parse_messages()
                 
                 # Update UI in main thread
                 self.root.after(0, self._on_discord_parsed)
-                
             except Exception as e:
-                logger.error(f"Failed to parse Discord JSON: {e}")
-                self.root.after(0, lambda: self._show_error(f"Failed to parse Discord JSON:\n{str(e)}"))
+                error_msg = f"Failed to parse HTML archive: {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                self.root.after(0, lambda: self._show_error(error_msg))
         
         threading.Thread(target=parse_worker, daemon=True).start()
     
     def _on_discord_parsed(self):
-        """Called when Discord JSON parsing is complete"""
-        self._update_progress(f"Loaded {len(self.discord_messages)} Discord messages")
-        logger.info(f"Successfully parsed {len(self.discord_messages)} Discord messages")
+        """Called when HTML archive parsing is complete"""
+        self._update_progress(f"Loaded {len(self.discord_messages)} Discord messages from HTML")
+        logger.info(f"Successfully parsed {len(self.discord_messages)} Discord messages from HTML archive")
         
         # Update cache status when new data is loaded
         self._update_cache_status()
@@ -299,7 +302,7 @@ class MainWindow:
             return
             
         if not self.discord_messages:
-            self._show_error("Please select and load a Discord JSON file")
+            self._show_error("Please select and load an HTML archive file")
             return
         
         # Check image format
@@ -491,7 +494,7 @@ class MainWindow:
     def _start_cache_build(self):
         """Start building the embedding cache"""
         if not self.discord_messages:
-            self._show_error("Please load Discord JSON file first")
+            self._show_error("Please load HTML archive file first")
             return
         
         # Disable buttons during cache build
@@ -561,7 +564,7 @@ class MainWindow:
             return
         
         if not self.discord_messages:
-            self._show_error("Please load Discord JSON file first")
+            self._show_error("Please load HTML archive file first")
             return
         
         if not self.search_engine.has_cache():

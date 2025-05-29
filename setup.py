@@ -82,7 +82,8 @@ torchaudio==2.6.0"""
         other_requirements = """numpy
 Pillow
 requests
-colorlog"""
+colorlog
+beautifulsoup4==4.12.3"""
         
         with open("requirements_other_temp.txt", "w") as f:
             f.write(other_requirements)
@@ -109,7 +110,8 @@ torchaudio==2.6.0
 numpy
 Pillow
 requests
-colorlog"""
+colorlog
+beautifulsoup4==4.12.3"""
         
         with open("requirements_cpu_temp.txt", "w") as f:
             f.write(cpu_requirements)
@@ -181,7 +183,8 @@ def cleanup_dependencies():
         "ftfy",
         "regex",
         "tqdm",
-        "packaging"
+        "packaging",
+        "beautifulsoup4"
     ]
     
     print(f"\n🗑️  Removing packages: {', '.join(packages_to_remove)}")
@@ -303,7 +306,7 @@ def main():
     
     packages_to_check = [
         "torch", "torchvision", "numpy", "clip", 
-        "PIL", "requests", "colorlog"
+        "PIL", "requests", "colorlog", "beautifulsoup4"
     ]
     
     failed_imports = []

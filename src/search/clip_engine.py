@@ -10,7 +10,7 @@ from PIL import Image
 from typing import Optional, List, Union
 from pathlib import Path
 
-from ..core.config import ClipConfig
+from core.config import ClipConfig
 
 logger = logging.getLogger(__name__)
 

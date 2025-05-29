@@ -1,25 +1,35 @@
 #!/usr/bin/env python3
 """
-Reverse Archive Search - Main application entry point.
+Reverse Archive Search - Main Application
+
+IMPORTANT: Now uses HTML files instead of JSON for fresh Discord URLs!
+This solves the 24-hour URL expiration issue.
+
+To use:
+1. Export your Discord channel as HTML (much faster than JSON)
+2. Launch this application
+3. Use the "Load HTML Archive" button to select your HTML file
+4. HTML files contain fresh URLs that won't expire for 24 hours!
 """
 
-import tkinter as tk
-import logging
 import sys
+import logging
+import tkinter as tk
 from pathlib import Path
 
-# Add src to Python path for imports
+# Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from src.core.config import Config, setup_logging
-from src.gui.main_window import MainWindow
+from core.config import Config, setup_logging
+from gui.main_window import MainWindow
 
 def main():
     """Main application entry point"""
-    
     # Setup logging
     setup_logging("INFO")
     logger = logging.getLogger(__name__)
+    
+    logger.info("Starting Reverse Archive Search with HTML File Selection!")
     
     try:
         # Load configuration
@@ -29,15 +39,18 @@ def main():
         root = tk.Tk()
         app = MainWindow(root, config)
         
-        logger.info("Starting Reverse Archive Search application")
-        logger.info(f"Cache directory: {config.cache.cache_dir}")
+        logger.info("Launching search interface...")
         
         # Start the application
         root.mainloop()
         
+    except KeyboardInterrupt:
+        logger.info("Application stopped by user")
     except Exception as e:
-        logger.error(f"Application failed to start: {e}")
-        raise
+        logger.error(f"Application error: {e}", exc_info=True)
+        return 1
+    
+    return 0
 
 if __name__ == "__main__":
-    main() 
+    sys.exit(main()) 
