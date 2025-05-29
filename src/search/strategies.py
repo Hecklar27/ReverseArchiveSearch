@@ -5,16 +5,18 @@ Search strategy implementations using the Strategy pattern.
 import logging
 import requests
 import time
+import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Callable
 from pathlib import Path
 from PIL import Image
 from io import BytesIO
 
-from ..data.models import DiscordMessage, SearchResult, ProcessingStats
+from ..data.models import DiscordMessage, SearchResult, ProcessingStats, DiscordAttachment
 from ..core.config import Config
 from .clip_engine import CLIPEngine
 from .image_downloader import ImageDownloader
+from .cache_manager import EmbeddingCacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -301,20 +303,132 @@ class CachedSearchStrategy(SearchStrategy):
     def __init__(self, config: Config):
         self.config = config
         self.clip_engine = CLIPEngine(config.clip)
-        # TODO: Implement caching in Phase 2
+        self.cache_manager = EmbeddingCacheManager(config)
         
     def search(self, user_image_path: Path, discord_messages: List[DiscordMessage],
                progress_callback: Optional[Callable[[int, int, str], None]] = None) -> Tuple[List[SearchResult], ProcessingStats]:
         """
         Perform cached search using pre-computed embeddings.
-        
-        Note: This is a placeholder for Phase 2 implementation.
         """
-        logger.warning("Cached search not yet implemented - falling back to real-time search")
+        logger.info("Starting cached search with pre-computed embeddings")
+        start_time = time.time()
         
-        # Fallback to real-time search for now
-        realtime_strategy = RealTimeSearchStrategy(self.config)
-        return realtime_strategy.search(user_image_path, discord_messages, progress_callback)
+        # Initialize statistics
+        stats = ProcessingStats()
+        stats.total_messages = len(discord_messages)
+        
+        # Check if cache is available
+        if not self.cache_manager.has_valid_cache():
+            logger.error("No valid cache available. Please run 'Pre-process Archive' first.")
+            raise ValueError("No valid cache available. Please run 'Pre-process Archive' first.")
+        
+        # Load cache if not already loaded
+        if not self.cache_manager.load_cache():
+            logger.error("Failed to load cache. Please rebuild cache.")
+            raise ValueError("Failed to load cache. Please rebuild cache.")
+        
+        # Get cached data
+        cached_embeddings = self.cache_manager.get_embeddings()
+        metadata = self.cache_manager.get_metadata()
+        
+        if cached_embeddings is None or metadata is None:
+            logger.error("Cache data is corrupted. Please rebuild cache.")
+            raise ValueError("Cache data is corrupted. Please rebuild cache.")
+        
+        logger.info(f"Successfully loaded cache with {len(cached_embeddings)} embeddings")
+        
+        # Report progress
+        if progress_callback:
+            progress_callback(0, 1, "Encoding user image...")
+        
+        # Encode user image
+        try:
+            logger.info(f"Encoding user image: {user_image_path}")
+            user_embedding = self.clip_engine.encode_image(user_image_path)
+            logger.info("User image encoded successfully")
+        except Exception as e:
+            logger.error(f"Failed to encode user image: {e}")
+            raise
+        
+        # Report progress
+        if progress_callback:
+            progress_callback(1, 2, "Calculating similarities...")
+        
+        # Calculate similarities with all cached embeddings
+        try:
+            logger.info("Calculating similarities with cached embeddings...")
+            similarities = self.clip_engine.calculate_similarities_batch(
+                user_embedding, cached_embeddings)
+            logger.info(f"Calculated similarities for {len(similarities)} cached embeddings")
+        except Exception as e:
+            logger.error(f"Failed to calculate similarities: {e}")
+            raise
+        
+        # Create search results from cache metadata
+        results = []
+        for index, similarity in enumerate(similarities):
+            if index in metadata.index_to_metadata:
+                cache_data = metadata.index_to_metadata[index]
+                
+                try:
+                    # Create dummy message and attachment objects for compatibility
+                    # In a real implementation, you might want to store these fully
+                    message = DiscordMessage(
+                        id=cache_data['message_id'],
+                        type=cache_data['message_type'],
+                        content=cache_data.get('message_content', ''),
+                        author=cache_data.get('author', 'Unknown'),
+                        timestamp=cache_data.get('timestamp', ''),
+                        attachments=[]
+                    )
+                    
+                    # Create attachment (simplified - only the essential data)
+                    attachment = DiscordAttachment(
+                        id=cache_data.get('attachment_id', 'cached'),
+                        filename=cache_data['filename'],
+                        url=cache_data['url'],
+                        file_size_bytes=cache_data.get('file_size_bytes', 0)
+                    )
+                    
+                    # Create search result
+                    result = SearchResult(
+                        message=message,
+                        attachment=attachment,
+                        similarity_score=float(similarity),
+                        discord_url=cache_data['discord_url']
+                    )
+                    results.append(result)
+                    
+                except Exception as e:
+                    logger.error(f"Failed to reconstruct objects from cache data at index {index}: {e}")
+                    logger.error(f"Cache data: {cache_data}")
+                    raise
+        
+        # Update statistics
+        stats.total_images = len(cached_embeddings)
+        stats.processed_images = len(results)
+        stats.messages_with_images = len(set(r.message.id for r in results))
+        
+        # Report progress
+        if progress_callback:
+            progress_callback(2, 2, "Sorting results...")
+        
+        # Sort results by similarity (highest first)
+        results.sort(reverse=True, key=lambda x: x.similarity_score)
+        
+        # Limit results
+        max_results = self.config.ui.max_results
+        if len(results) > max_results:
+            results = results[:max_results]
+        
+        # Finalize statistics
+        stats.processing_time_seconds = time.time() - start_time
+        
+        logger.info(f"Cached search completed in {stats.processing_time_seconds:.2f}s")
+        logger.info(f"Processed {stats.processed_images} cached embeddings")
+        logger.info(f"Found {len(results)} results")
+        
+        return results, stats
 
 class SearchEngine:
     """Main search engine that orchestrates different search strategies"""
@@ -324,6 +438,7 @@ class SearchEngine:
         self.optimized_strategy = OptimizedRealTimeSearchStrategy(config)
         self.realtime_strategy = RealTimeSearchStrategy(config)
         self.cached_strategy = CachedSearchStrategy(config)
+        self.cache_manager = EmbeddingCacheManager(config)
         
     def search(self, user_image_path: Path, discord_messages: List[DiscordMessage], 
                use_cache: bool = False, use_optimization: bool = True,
@@ -344,8 +459,20 @@ class SearchEngine:
         
         if use_cache:
             logger.info("Using cached search strategy")
-            return self.cached_strategy.search(user_image_path, discord_messages, progress_callback)
-        elif use_optimization:
+            try:
+                return self.cached_strategy.search(user_image_path, discord_messages, progress_callback)
+            except ValueError as e:
+                logger.warning(f"Cached search failed (cache issue): {e}")
+                logger.info("Falling back to real-time search")
+                # Fall back to real-time search
+                use_cache = False
+            except Exception as e:
+                logger.warning(f"Cached search failed (unexpected error): {e}")
+                logger.info("Falling back to real-time search")
+                # Fall back to real-time search
+                use_cache = False
+        
+        if use_optimization:
             logger.info("Using optimized real-time search strategy")
             try:
                 return self.optimized_strategy.search(user_image_path, discord_messages, progress_callback)
@@ -356,11 +483,32 @@ class SearchEngine:
             logger.info("Using basic real-time search strategy")
             return self.realtime_strategy.search(user_image_path, discord_messages, progress_callback)
     
-    def get_device_info(self) -> dict:
-        """Get CLIP device information"""
-        return self.optimized_strategy.clip_engine.get_device_info()
+    def build_cache(self, discord_messages: List[DiscordMessage],
+                   progress_callback: Optional[Callable[[int, int, str], None]] = None) -> bool:
+        """
+        Build embedding cache for faster searches.
+        
+        Args:
+            discord_messages: Discord messages to process
+            progress_callback: Optional progress callback
+            
+        Returns:
+            True if cache was built successfully
+        """
+        return self.cache_manager.build_cache(discord_messages, progress_callback)
     
     def has_cache(self) -> bool:
-        """Check if cached embeddings are available (Phase 2)"""
-        # TODO: Implement cache detection in Phase 2
-        return False 
+        """Check if valid cached embeddings are available"""
+        return self.cache_manager.has_valid_cache()
+    
+    def get_cache_stats(self) -> dict:
+        """Get cache statistics"""
+        return self.cache_manager.get_cache_stats()
+    
+    def clear_cache(self) -> None:
+        """Clear embedding cache"""
+        self.cache_manager.clear_cache()
+    
+    def get_device_info(self) -> dict:
+        """Get CLIP device information"""
+        return self.optimized_strategy.clip_engine.get_device_info() 

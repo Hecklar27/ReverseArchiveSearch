@@ -38,6 +38,9 @@ class MainWindow:
         
         # Show device info on startup
         self._show_device_info()
+        
+        # Check cache status on startup
+        self._update_cache_status()
     
     def _setup_window(self):
         """Configure the main window"""
@@ -74,15 +77,39 @@ class MainWindow:
         search_frame = ttk.Frame(self.control_frame)
         search_frame.grid(row=2, column=0, columnspan=3, pady=(10, 0), sticky=tk.EW)
         
+        # Real-time search button
         self.search_button = ttk.Button(search_frame, text="Search (Real-time)", 
                                        command=self._start_search)
         self.search_button.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Cache option (Phase 2)
-        self.use_cache_var = tk.BooleanVar()
-        self.cache_checkbox = ttk.Checkbutton(search_frame, text="Use Cache (Phase 2)", 
-                                            variable=self.use_cache_var, state='disabled')
-        self.cache_checkbox.pack(side=tk.LEFT, padx=(0, 10))
+        # Cache controls (Phase 2)
+        cache_frame = ttk.LabelFrame(search_frame, text="Phase 2: Cache Mode", padding="5")
+        cache_frame.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Cache status
+        self.cache_status_var = tk.StringVar(value="No cache")
+        self.cache_status_label = ttk.Label(cache_frame, textvariable=self.cache_status_var, 
+                                           font=('TkDefaultFont', 8))
+        self.cache_status_label.pack(anchor=tk.W)
+        
+        # Cache controls sub-frame
+        cache_controls = ttk.Frame(cache_frame)
+        cache_controls.pack(fill=tk.X, pady=(2, 0))
+        
+        # Pre-process archive button
+        self.preprocess_button = ttk.Button(cache_controls, text="Pre-process Archive", 
+                                          command=self._start_cache_build, state='disabled')
+        self.preprocess_button.pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Cached search button
+        self.cached_search_button = ttk.Button(cache_controls, text="Search (Cached)", 
+                                             command=self._start_cached_search, state='disabled')
+        self.cached_search_button.pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Clear cache button
+        self.clear_cache_button = ttk.Button(cache_controls, text="Clear Cache", 
+                                           command=self._clear_cache, state='disabled')
+        self.clear_cache_button.pack(side=tk.LEFT)
         
         # Device info
         self.device_label = ttk.Label(search_frame, text="Device: Loading...")
@@ -258,8 +285,11 @@ class MainWindow:
     
     def _on_discord_parsed(self):
         """Called when Discord JSON parsing is complete"""
-        self._update_progress(f"Loaded {len(self.discord_messages)} messages with images")
-        logger.info(f"Parsed {len(self.discord_messages)} Discord messages with images")
+        self._update_progress(f"Loaded {len(self.discord_messages)} Discord messages")
+        logger.info(f"Successfully parsed {len(self.discord_messages)} Discord messages")
+        
+        # Update cache status when new data is loaded
+        self._update_cache_status()
     
     def _start_search(self):
         """Start the image search process"""
@@ -274,7 +304,7 @@ class MainWindow:
         
         # Check image format
         if not self.config.is_supported_image(self.user_image_path):
-            self._show_error(f"Unsupported image format. Supported: {', '.join(self.config.get_supported_image_extensions())}")
+            self._show_error(f"Unsupported image format. Supported: .png, .jpg, .jpeg")
             return
         
         # Disable search button and show progress
@@ -285,8 +315,7 @@ class MainWindow:
         # Clear previous results
         self._clear_results()
         
-        # Start search in background thread
-        use_cache = self.use_cache_var.get()
+        # Start search in background thread - real-time search
         
         def progress_callback(current: int, total: int, status: str):
             """Progress callback for search updates"""
@@ -303,7 +332,7 @@ class MainWindow:
                 results, stats = self.search_engine.search(
                     self.user_image_path, 
                     self.discord_messages, 
-                    use_cache=use_cache,
+                    use_cache=False,  # Real-time search
                     progress_callback=progress_callback
                 )
                 
@@ -333,17 +362,19 @@ class MainWindow:
         self._update_progress(f"Search complete - found {len(results)} results in {stats.processing_time_seconds:.1f}s")
     
     def _on_search_error(self, error_message: str):
-        """Called when search encounters an error"""
+        """Handle search error"""
         self.progress_bar.grid_remove()
+        self.progress_var.set("Search failed")
         self.search_button.config(state='normal')
-        
-        self._update_progress("Search failed")
-        self._show_error(f"Search failed:\n{error_message}")
+        self._show_error(f"Search failed: {error_message}")
+        logger.error(f"Search error: {error_message}")
     
     def _update_search_progress(self, progress_percent: float, progress_text: str):
-        """Update search progress bar and text"""
-        self.progress_bar['value'] = progress_percent
+        """Update search progress"""
+        self.progress_bar.stop()  # Stop indeterminate mode
+        self.progress_bar.config(mode='determinate', value=progress_percent)
         self.progress_var.set(progress_text)
+        self.root.update_idletasks()
     
     def _display_results(self, results: List[SearchResult], stats: ProcessingStats):
         """Display search results in the tree view"""
@@ -455,4 +486,190 @@ class MainWindow:
     def _show_error(self, message: str):
         """Show error dialog"""
         messagebox.showerror("Error", message)
-        logger.error(message) 
+        logger.error(message)
+    
+    def _start_cache_build(self):
+        """Start building the embedding cache"""
+        if not self.discord_messages:
+            self._show_error("Please load Discord JSON file first")
+            return
+        
+        # Disable buttons during cache build
+        self.preprocess_button.config(state='disabled')
+        self.search_button.config(state='disabled')
+        self.cached_search_button.config(state='disabled')
+        
+        # Show progress
+        self.progress_bar.grid()
+        self.progress_bar.config(value=0)
+        self.progress_var.set("Building cache...")
+        
+        def progress_callback(current: int, total: int, status: str):
+            """Update progress during cache building"""
+            if total > 0:
+                progress_percent = (current / total) * 100
+                self.root.after(0, lambda: self._update_cache_progress(progress_percent, status))
+        
+        def cache_build_worker():
+            """Worker thread for cache building"""
+            try:
+                success = self.search_engine.build_cache(self.discord_messages, progress_callback)
+                self.root.after(0, lambda: self._on_cache_build_complete(success))
+            except Exception as e:
+                error_msg = str(e)
+                self.root.after(0, lambda: self._on_cache_build_error(error_msg))
+        
+        # Start cache building in background thread
+        threading.Thread(target=cache_build_worker, daemon=True).start()
+    
+    def _on_cache_build_complete(self, success: bool):
+        """Handle cache build completion"""
+        self.progress_bar.grid_remove()
+        
+        if success:
+            self.progress_var.set("Cache built successfully")
+            self._update_cache_status()
+            messagebox.showinfo("Cache Built", 
+                              "Embedding cache built successfully!\nCached searches will now be much faster.")
+        else:
+            self.progress_var.set("Cache build failed")
+            self._show_error("Failed to build cache. Check logs for details.")
+        
+        # Re-enable buttons
+        self.preprocess_button.config(state='normal')
+        self.search_button.config(state='normal')
+    
+    def _on_cache_build_error(self, error_message: str):
+        """Handle cache build error"""
+        self.progress_bar.grid_remove()
+        self.progress_var.set("Cache build failed")
+        self.preprocess_button.config(state='normal')
+        self.search_button.config(state='normal')
+        self._show_error(f"Cache build failed: {error_message}")
+        logger.error(f"Cache build error: {error_message}")
+    
+    def _update_cache_progress(self, progress_percent: float, progress_text: str):
+        """Update cache build progress"""
+        self.progress_bar.config(value=progress_percent)
+        self.progress_var.set(f"Building cache: {progress_text}")
+        self.root.update_idletasks()
+    
+    def _start_cached_search(self):
+        """Start cached search"""
+        if not self.user_image_path:
+            self._show_error("Please select a user image first")
+            return
+        
+        if not self.discord_messages:
+            self._show_error("Please load Discord JSON file first")
+            return
+        
+        if not self.search_engine.has_cache():
+            self._show_error("No valid cache available. Please run 'Pre-process Archive' first.")
+            return
+        
+        # Disable buttons during search
+        self.cached_search_button.config(state='disabled')
+        self.search_button.config(state='disabled')
+        self.preprocess_button.config(state='disabled')
+        
+        # Clear previous results
+        self._clear_results()
+        
+        # Show progress
+        self.progress_bar.grid()
+        self.progress_bar.config(value=0, mode='indeterminate')
+        self.progress_var.set("Starting cached search...")
+        self.progress_bar.start()
+        
+        def progress_callback(current: int, total: int, status: str):
+            """Update progress during cached search"""
+            if total > 0:
+                progress_percent = (current / total) * 100
+                self.root.after(0, lambda: self._update_search_progress(progress_percent, status))
+        
+        def search_worker():
+            """Worker thread for cached search"""
+            try:
+                results, stats = self.search_engine.search(
+                    self.user_image_path, 
+                    self.discord_messages, 
+                    use_cache=True,
+                    progress_callback=progress_callback
+                )
+                self.root.after(0, lambda: self._on_search_complete(results, stats))
+            except Exception as e:
+                error_msg = str(e)
+                self.root.after(0, lambda: self._on_cached_search_error(error_msg))
+        
+        # Start search in background thread
+        threading.Thread(target=search_worker, daemon=True).start()
+    
+    def _on_cached_search_error(self, error_message: str):
+        """Handle cached search error"""
+        self.progress_bar.stop()
+        self.progress_bar.grid_remove()
+        self.progress_var.set("Cached search failed")
+        
+        # Re-enable buttons
+        self.cached_search_button.config(state='normal')
+        self.search_button.config(state='normal')
+        self.preprocess_button.config(state='normal')
+        
+        self._show_error(f"Cached search failed: {error_message}")
+        logger.error(f"Cached search error: {error_message}")
+    
+    def _clear_cache(self):
+        """Clear the embedding cache"""
+        if messagebox.askyesno("Clear Cache", 
+                              "Are you sure you want to clear the embedding cache?\n"
+                              "This will remove all pre-computed embeddings."):
+            try:
+                self.search_engine.clear_cache()
+                self._update_cache_status()
+                messagebox.showinfo("Cache Cleared", "Embedding cache cleared successfully.")
+                self.progress_var.set("Cache cleared")
+            except Exception as e:
+                self._show_error(f"Failed to clear cache: {e}")
+    
+    def _update_cache_status(self):
+        """Update cache status display"""
+        try:
+            if self.search_engine.has_cache():
+                cache_stats = self.search_engine.get_cache_stats()
+                
+                if cache_stats.get('status') == 'valid':
+                    total_images = cache_stats.get('total_images', 0)
+                    age_days = cache_stats.get('age_days', 0)
+                    
+                    status_text = f"✓ {total_images} images cached"
+                    if age_days > 0:
+                        status_text += f" ({age_days}d old)"
+                    
+                    self.cache_status_var.set(status_text)
+                    self.cached_search_button.config(state='normal')
+                    self.clear_cache_button.config(state='normal')
+                else:
+                    # Check if cache is incompatible vs just invalid
+                    cache_manager = self.search_engine.cache_manager
+                    if cache_manager._load_metadata():  # Cache exists but invalid
+                        self.cache_status_var.set("⚠ Incompatible cache - rebuild needed")
+                    else:
+                        self.cache_status_var.set("⚠ Invalid cache")
+                    
+                    self.cached_search_button.config(state='disabled')
+                    self.clear_cache_button.config(state='normal')  # Allow clearing incompatible cache
+            else:
+                self.cache_status_var.set("No cache")
+                self.cached_search_button.config(state='disabled')
+                self.clear_cache_button.config(state='disabled')
+                
+            # Enable pre-process button if we have Discord data
+            if self.discord_messages:
+                self.preprocess_button.config(state='normal')
+            else:
+                self.preprocess_button.config(state='disabled')
+                
+        except Exception as e:
+            logger.warning(f"Failed to update cache status: {e}")
+            self.cache_status_var.set("Cache error") 

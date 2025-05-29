@@ -1,52 +1,43 @@
 #!/usr/bin/env python3
 """
-Reverse Archive Search - Main Application
-A tool for finding original Discord messages containing similar images using CLIP semantic similarity.
+Reverse Archive Search - Main application entry point.
 """
 
-import sys
-import logging
 import tkinter as tk
-from tkinter import messagebox
+import logging
+import sys
 from pathlib import Path
 
-# Local imports
+# Add src to Python path for imports
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+from src.core.config import Config, setup_logging
 from src.gui.main_window import MainWindow
-from src.core.logger import setup_logging
-from src.core.config import Config
 
 def main():
     """Main application entry point"""
+    
+    # Setup logging
+    setup_logging("INFO")
+    logger = logging.getLogger(__name__)
+    
     try:
-        # Setup logging
-        setup_logging()
-        logger = logging.getLogger(__name__)
-        logger.info("Starting Reverse Archive Search application")
-        
-        # Initialize configuration
-        config = Config()
+        # Load configuration
+        config = Config.load_default()
         
         # Create main window
         root = tk.Tk()
         app = MainWindow(root, config)
         
+        logger.info("Starting Reverse Archive Search application")
+        logger.info(f"Cache directory: {config.cache.cache_dir}")
+        
         # Start the application
         root.mainloop()
         
     except Exception as e:
-        # Handle critical errors
-        error_msg = f"Critical error starting application: {str(e)}"
-        logging.error(error_msg, exc_info=True)
-        
-        # Show error dialog if possible
-        try:
-            root = tk.Tk()
-            root.withdraw()  # Hide main window
-            messagebox.showerror("Application Error", error_msg)
-        except:
-            print(f"CRITICAL ERROR: {error_msg}")
-        
-        sys.exit(1)
+        logger.error(f"Application failed to start: {e}")
+        raise
 
 if __name__ == "__main__":
     main() 
