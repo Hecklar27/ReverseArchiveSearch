@@ -11,3 +11,6 @@ memory-bank/progress.md
 memory-bank/projectbrief.md
 memory-bank/systemPatterns.md
 memory-bank/techContext.md
+reverse_archive_search.log
+src/gui/__pycache__/main_window.cpython-311.pyc
+src/search/__pycache__/cache_manager.cpython-311.pyc

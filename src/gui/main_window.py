@@ -380,7 +380,11 @@ class MainWindow:
         # Stop progress
         self.progress_bar['value'] = 100
         self.progress_bar.grid_remove()
+        
+        # Re-enable all buttons
         self.search_button.config(state='normal')
+        self.cached_search_button.config(state='normal')
+        self.preprocess_button.config(state='normal')
         
         # Update results display
         self._display_results(results, stats)
@@ -392,7 +396,12 @@ class MainWindow:
         """Handle search error"""
         self.progress_bar.grid_remove()
         self.progress_var.set("Search failed")
+        
+        # Re-enable all buttons
         self.search_button.config(state='normal')
+        self.cached_search_button.config(state='normal')
+        self.preprocess_button.config(state='normal')
+        
         self._show_error(f"Search failed: {error_message}")
         logger.error(f"Search error: {error_message}")
     
