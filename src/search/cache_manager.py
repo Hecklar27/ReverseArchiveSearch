@@ -19,6 +19,16 @@ from .image_downloader import ImageDownloader
 
 logger = logging.getLogger(__name__)
 
+class ParsedMessagesMetadata:
+    """Metadata for parsed Discord messages"""
+    
+    def __init__(self, html_file_path: str, html_file_mtime: float, messages_count: int):
+        self.html_file_path = html_file_path
+        self.html_file_mtime = html_file_mtime
+        self.messages_count = messages_count
+        self.parsed_at = datetime.now()
+        self.version = "1.0"
+
 class CacheMetadata:
     """Metadata for cached embeddings"""
     
@@ -28,10 +38,20 @@ class CacheMetadata:
         self.total_images = 0
         self.cache_version = "2.1"  # Updated for PyTorch version tracking
         self.clip_model = None
-        self.pytorch_version = torch.__version__  # Track PyTorch version
-        self.url_to_index = {}  # URL -> index mapping
-        self.index_to_metadata = {}  # index -> {message_id, attachment info, discord_url}
+        self.pytorch_version = torch.__version__
+        self.index_to_metadata: Dict[int, Dict[str, Any]] = {}
         
+    def add_image_metadata(self, index: int, message: DiscordMessage, attachment: DiscordAttachment):
+        """Add metadata for an image at the given index"""
+        self.index_to_metadata[index] = {
+            'message_id': message.id,
+            'attachment_filename': attachment.filename,
+            'attachment_url': attachment.url,
+            'author_name': message.author.name,
+            'timestamp': message.timestamp,
+            'content': message.content[:100] if message.content else ""  # First 100 chars
+        }
+    
     def is_expired(self, max_age_days: int) -> bool:
         """Check if cache is expired"""
         expiry_date = self.created_at + timedelta(days=max_age_days)
@@ -50,16 +70,20 @@ class CacheMetadata:
         }
 
 class EmbeddingCacheManager:
-    """Manages pre-computed embeddings for Discord images"""
+    """Manages embedding cache for Discord messages"""
     
     def __init__(self, config: Config):
         self.config = config
-        self.cache_config = config.cache
-        self.clip_engine = CLIPEngine(config.clip)
-        self.image_downloader = ImageDownloader(max_workers=8)
+        self.cache_dir = Path(config.cache.cache_dir)
+        self.cache_dir.mkdir(exist_ok=True)
         
-        # Ensure cache directory exists
-        self.cache_config.cache_dir.mkdir(exist_ok=True)
+        self.embeddings_file = self.cache_dir / "embeddings.npy"
+        self.metadata_file = self.cache_dir / "metadata.pkl"
+        self.parsed_messages_file = self.cache_dir / "parsed_messages.pkl"
+        self.parsed_metadata_file = self.cache_dir / "parsed_metadata.pkl"
+        
+        self.clip_engine = CLIPEngine(config.clip)
+        self.image_downloader = ImageDownloader(timeout=10, max_retries=3, max_workers=8)
         
         self._embeddings = None
         self._metadata = None
@@ -67,8 +91,8 @@ class EmbeddingCacheManager:
     def has_valid_cache(self) -> bool:
         """Check if valid cache exists"""
         try:
-            embeddings_path = self.cache_config.get_embeddings_path()
-            metadata_path = self.cache_config.get_metadata_path()
+            embeddings_path = self.embeddings_file
+            metadata_path = self.metadata_file
             
             if not (embeddings_path.exists() and metadata_path.exists()):
                 return False
@@ -79,7 +103,7 @@ class EmbeddingCacheManager:
                 return False
             
             # Check if cache is expired
-            if metadata.is_expired(self.cache_config.max_age_days):
+            if metadata.is_expired(self.config.cache.max_age_days):
                 logger.info("Cache expired, needs regeneration")
                 return False
             
@@ -110,7 +134,7 @@ class EmbeddingCacheManager:
     def _load_metadata(self) -> Optional[CacheMetadata]:
         """Load cache metadata"""
         try:
-            metadata_path = self.cache_config.get_metadata_path()
+            metadata_path = self.metadata_file
             with open(metadata_path, 'rb') as f:
                 return pickle.load(f)
         except Exception as e:
@@ -120,7 +144,7 @@ class EmbeddingCacheManager:
     def _save_metadata(self, metadata: CacheMetadata) -> None:
         """Save cache metadata"""
         try:
-            metadata_path = self.cache_config.get_metadata_path()
+            metadata_path = self.metadata_file
             with open(metadata_path, 'wb') as f:
                 pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
         except Exception as e:
@@ -130,7 +154,7 @@ class EmbeddingCacheManager:
     def _load_embeddings(self) -> Optional[np.ndarray]:
         """Load cached embeddings"""
         try:
-            embeddings_path = self.cache_config.get_embeddings_path()
+            embeddings_path = self.embeddings_file
             with open(embeddings_path, 'rb') as f:
                 return pickle.load(f)
         except Exception as e:
@@ -140,9 +164,9 @@ class EmbeddingCacheManager:
     def _save_embeddings(self, embeddings: np.ndarray) -> None:
         """Save embeddings to cache"""
         try:
-            embeddings_path = self.cache_config.get_embeddings_path()
+            embeddings_path = self.embeddings_file
             with open(embeddings_path, 'wb') as f:
-                if self.cache_config.compression:
+                if self.config.cache.compression:
                     pickle.dump(embeddings, f, protocol=pickle.HIGHEST_PROTOCOL)
                 else:
                     pickle.dump(embeddings, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -185,7 +209,7 @@ class EmbeddingCacheManager:
         metadata.clip_model = self.clip_engine.model_name
         
         # Process images in batches
-        batch_size = self.cache_config.batch_size
+        batch_size = self.config.cache.batch_size
         all_embeddings = []
         processed_count = 0
         
@@ -222,7 +246,6 @@ class EmbeddingCacheManager:
                         
                         # Store in metadata
                         index = len(all_embeddings)
-                        metadata.url_to_index[attachment.url] = index
                         metadata.index_to_metadata[index] = {
                             'message_id': message.id,
                             'message_type': message.type,
@@ -310,14 +333,21 @@ class EmbeddingCacheManager:
     def clear_cache(self) -> None:
         """Clear cache files and memory"""
         try:
-            embeddings_path = self.cache_config.get_embeddings_path()
-            metadata_path = self.cache_config.get_metadata_path()
+            embeddings_path = self.embeddings_file
+            metadata_path = self.metadata_file
             
             if embeddings_path.exists():
                 embeddings_path.unlink()
+                logger.info("Cleared embeddings cache")
+            
             if metadata_path.exists():
                 metadata_path.unlink()
+                logger.info("Cleared metadata cache")
             
+            # Also clear parsed messages
+            self.clear_parsed_messages()
+            
+            # Clear memory cache
             self._embeddings = None
             self._metadata = None
             
@@ -325,6 +355,7 @@ class EmbeddingCacheManager:
             
         except Exception as e:
             logger.error(f"Failed to clear cache: {e}")
+            raise
     
     def get_cache_stats(self) -> dict:
         """Get cache statistics"""
@@ -338,8 +369,8 @@ class EmbeddingCacheManager:
             
             # Add file sizes
             try:
-                embeddings_path = self.cache_config.get_embeddings_path()
-                metadata_path = self.cache_config.get_metadata_path()
+                embeddings_path = self.embeddings_file
+                metadata_path = self.metadata_file
                 
                 if embeddings_path.exists():
                     stats['embeddings_size_mb'] = embeddings_path.stat().st_size / (1024 * 1024)
@@ -382,4 +413,88 @@ class EmbeddingCacheManager:
         except Exception as e:
             logger.warning(f"Error validating cache compatibility: {e}")
             return False
+    
+    def has_parsed_messages(self, html_file_path: str) -> bool:
+        """Check if we have valid parsed messages for the given HTML file"""
+        try:
+            if not self.parsed_messages_file.exists() or not self.parsed_metadata_file.exists():
+                return False
+            
+            # Load metadata
+            with open(self.parsed_metadata_file, 'rb') as f:
+                metadata = pickle.load(f)
+            
+            # Check if HTML file path matches
+            if metadata.html_file_path != html_file_path:
+                logger.info(f"HTML file path changed: {metadata.html_file_path} -> {html_file_path}")
+                return False
+            
+            # Check if HTML file still exists
+            html_path = Path(html_file_path)
+            if not html_path.exists():
+                logger.info(f"HTML file no longer exists: {html_file_path}")
+                return False
+            
+            # Check if HTML file has been modified
+            current_mtime = html_path.stat().st_mtime
+            if abs(current_mtime - metadata.html_file_mtime) > 1:  # 1 second tolerance
+                logger.info(f"HTML file modified: {metadata.html_file_mtime} -> {current_mtime}")
+                return False
+            
+            logger.info(f"Found valid parsed messages for {html_file_path}")
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Error checking parsed messages: {e}")
+            return False
+    
+    def load_parsed_messages(self) -> Optional[List[DiscordMessage]]:
+        """Load previously parsed Discord messages"""
+        try:
+            if not self.parsed_messages_file.exists():
+                return None
+            
+            with open(self.parsed_messages_file, 'rb') as f:
+                messages = pickle.load(f)
+            
+            logger.info(f"Loaded {len(messages)} parsed Discord messages from cache")
+            return messages
+            
+        except Exception as e:
+            logger.error(f"Failed to load parsed messages: {e}")
+            return None
+    
+    def save_parsed_messages(self, messages: List[DiscordMessage], html_file_path: str):
+        """Save parsed Discord messages to cache"""
+        try:
+            html_path = Path(html_file_path)
+            html_mtime = html_path.stat().st_mtime
+            
+            # Save messages
+            with open(self.parsed_messages_file, 'wb') as f:
+                pickle.dump(messages, f)
+            
+            # Save metadata
+            metadata = ParsedMessagesMetadata(html_file_path, html_mtime, len(messages))
+            with open(self.parsed_metadata_file, 'wb') as f:
+                pickle.dump(metadata, f)
+            
+            logger.info(f"Saved {len(messages)} parsed Discord messages to cache")
+            
+        except Exception as e:
+            logger.error(f"Failed to save parsed messages: {e}")
+    
+    def clear_parsed_messages(self):
+        """Clear saved parsed messages"""
+        try:
+            if self.parsed_messages_file.exists():
+                self.parsed_messages_file.unlink()
+                logger.info("Cleared parsed messages cache")
+            
+            if self.parsed_metadata_file.exists():
+                self.parsed_metadata_file.unlink()
+                logger.info("Cleared parsed messages metadata")
+                
+        except Exception as e:
+            logger.error(f"Failed to clear parsed messages: {e}")
     

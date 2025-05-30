@@ -10,7 +10,7 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Callable
 from bs4 import BeautifulSoup
 
 from .models import DiscordMessage, DiscordAttachment, DiscordUser
@@ -23,25 +23,43 @@ class HTMLParser:
     def __init__(self, html_file: Path):
         self.html_file = html_file
         
-    def parse(self) -> List[DiscordMessage]:
+    def parse(self, progress_callback: Optional[Callable[[int, int, str], None]] = None) -> List[DiscordMessage]:
         """Parse HTML file and return list of Discord messages"""
         try:
             logger.info(f"Parsing HTML file: {self.html_file}")
             
+            if progress_callback:
+                progress_callback(0, 100, "Loading HTML file...")
+            
             with open(self.html_file, 'r', encoding='utf-8') as f:
                 content = f.read()
             
+            if progress_callback:
+                progress_callback(10, 100, "Parsing HTML structure...")
+            
             soup = BeautifulSoup(content, 'html.parser')
+            
+            if progress_callback:
+                progress_callback(20, 100, "Finding message containers...")
             
             # Find all message containers
             message_containers = soup.find_all('div', {'class': 'chatlog__message-container'})
             logger.info(f"Found {len(message_containers)} message containers")
             
+            total_containers = len(message_containers)
             messages = []
-            for container in message_containers:
+            
+            for i, container in enumerate(message_containers):
+                if progress_callback and i % 50 == 0:  # Update every 50 messages
+                    progress = 20 + int((i / total_containers) * 75)  # 20-95% range
+                    progress_callback(progress, 100, f"Parsing message {i+1}/{total_containers}")
+                
                 message = self._parse_message_container(container)
                 if message:
                     messages.append(message)
+            
+            if progress_callback:
+                progress_callback(100, 100, f"Completed! Found {len(messages)} messages with images")
             
             logger.info(f"Successfully parsed {len(messages)} messages with attachments")
             return messages

@@ -5,7 +5,7 @@ Now uses HTML parser for fresh URLs instead of expired JSON URLs.
 
 import logging
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Callable
 
 from .models import DiscordMessage, DiscordAttachment
 from .html_parser import HTMLParser
@@ -20,12 +20,12 @@ class DiscordParser:
         if not self.html_file_path.exists():
             raise FileNotFoundError(f"HTML file not found: {html_file_path}")
     
-    def parse_messages(self) -> List[DiscordMessage]:
+    def parse_messages(self, progress_callback: Optional[Callable[[int, int, str], None]] = None) -> List[DiscordMessage]:
         """Parse Discord messages with image attachments from HTML file"""
         logger.info(f"Parsing Discord HTML archive: {self.html_file_path}")
         
         html_parser = HTMLParser(self.html_file_path)
-        messages = html_parser.parse()
+        messages = html_parser.parse(progress_callback)
         
         logger.info(f"Loaded {len(messages)} messages with image attachments")
         return messages

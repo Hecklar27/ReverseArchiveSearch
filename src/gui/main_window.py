@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from typing import Optional, List
 import threading
+import pickle
 
 from core.config import Config
 from data.discord_parser import DiscordParser
@@ -41,6 +42,9 @@ class MainWindow:
         
         # Check cache status on startup
         self._update_cache_status()
+        
+        # Try to load previously parsed messages
+        self._load_previous_parsed_messages()
     
     def _setup_window(self):
         """Configure the main window"""
@@ -269,27 +273,47 @@ class MainWindow:
         if not self.html_archive_path:
             return
             
+        # Show progress bar during parsing
+        self.progress_bar.grid()
+        self.progress_bar.config(value=0, mode='determinate')
+        self._update_progress("Starting HTML parsing...")
+        
+        def progress_callback(current: int, total: int, status: str):
+            """Update progress during HTML parsing"""
+            progress_percent = (current / total * 100) if total > 0 else 0
+            self.root.after(0, lambda: self._update_parsing_progress(progress_percent, status))
+        
         def parse_worker():
             try:
-                self._update_progress("Parsing HTML archive...")
-                
                 # Create Discord parser for HTML file
                 self.discord_parser = DiscordParser(str(self.html_archive_path))
-                self.discord_messages = self.discord_parser.parse_messages()
+                self.discord_messages = self.discord_parser.parse_messages(progress_callback)
                 
                 # Update UI in main thread
                 self.root.after(0, self._on_discord_parsed)
             except Exception as e:
                 error_msg = f"Failed to parse HTML archive: {str(e)}"
                 logger.error(error_msg, exc_info=True)
-                self.root.after(0, lambda: self._show_error(error_msg))
+                self.root.after(0, lambda: self._on_parsing_error(error_msg))
         
         threading.Thread(target=parse_worker, daemon=True).start()
     
     def _on_discord_parsed(self):
         """Called when HTML archive parsing is complete"""
+        # Hide progress bar
+        self.progress_bar.grid_remove()
+        
         self._update_progress(f"Loaded {len(self.discord_messages)} Discord messages from HTML")
         logger.info(f"Successfully parsed {len(self.discord_messages)} Discord messages from HTML archive")
+        
+        # Save parsed messages to cache for future use
+        if self.html_archive_path and self.discord_messages:
+            try:
+                cache_manager = self.search_engine.cache_manager
+                cache_manager.save_parsed_messages(self.discord_messages, str(self.html_archive_path))
+                logger.info("Saved parsed messages to cache for future use")
+            except Exception as e:
+                logger.warning(f"Failed to save parsed messages to cache: {e}")
         
         # Update cache status when new data is loaded
         self._update_cache_status()
@@ -675,4 +699,65 @@ class MainWindow:
                 
         except Exception as e:
             logger.warning(f"Failed to update cache status: {e}")
-            self.cache_status_var.set("Cache error") 
+            self.cache_status_var.set("Cache error")
+    
+    def _update_parsing_progress(self, progress_percent: float, progress_text: str):
+        """Update HTML parsing progress"""
+        self.progress_bar.config(value=progress_percent)
+        self.progress_var.set(f"Parsing HTML: {progress_text}")
+        self.root.update_idletasks()
+    
+    def _on_parsing_error(self, error_msg: str):
+        """Handle HTML parsing error"""
+        self.progress_bar.grid_remove()
+        self.progress_var.set("Parsing failed")
+        self._show_error(error_msg)
+    
+    def _load_previous_parsed_messages(self):
+        """Try to load previously parsed messages"""
+        try:
+            cache_manager = self.search_engine.cache_manager
+            
+            # First, check if we have any saved parsed messages at all
+            if not cache_manager.parsed_messages_file.exists() or not cache_manager.parsed_metadata_file.exists():
+                logger.info("No previously parsed messages found")
+                return
+            
+            # Load the metadata to get the HTML file path
+            with open(cache_manager.parsed_metadata_file, 'rb') as f:
+                metadata = pickle.load(f)
+            
+            html_path = metadata.html_file_path
+            logger.info(f"Found previously parsed messages for HTML file: {html_path}")
+            
+            # Check if this HTML file is still valid
+            if cache_manager.has_parsed_messages(html_path):
+                logger.info(f"Loading previously parsed messages for {html_path}")
+                
+                # Load the messages
+                messages = cache_manager.load_parsed_messages()
+                if messages:
+                    self.discord_messages = messages
+                    self.html_archive_path = Path(html_path)
+                    self.html_file_var.set(str(self.html_archive_path))
+                    
+                    # Update the UI
+                    self._update_progress(f"Loaded {len(messages)} Discord messages from previous session")
+                    logger.info(f"Successfully loaded {len(messages)} previously parsed messages")
+                    
+                    # Update cache status to enable buttons
+                    self._update_cache_status()
+                else:
+                    logger.warning("Failed to load parsed messages despite validation passing")
+            else:
+                logger.info("Previously parsed messages are no longer valid (HTML file changed or missing)")
+                # Clean up invalid cached messages
+                cache_manager.clear_parsed_messages()
+                
+        except Exception as e:
+            logger.warning(f"Failed to load previously parsed messages: {e}")
+            # Clean up potentially corrupted cache
+            try:
+                cache_manager.clear_parsed_messages()
+            except:
+                pass 
