@@ -453,7 +453,9 @@ class MainWindow:
         # Add results
         for i, result in enumerate(results):
             author_name = result.message.author.nickname or result.message.author.name
-            similarity_pct = f"{result.similarity_score * 100:.1f}%"
+            # Convert cosine similarity (-1 to 1) to percentage (0% to 100%)
+            # Map: -1 -> 0%, 0 -> 50%, 1 -> 100%
+            similarity_pct = f"{(result.similarity_score + 1) * 50:.1f}%"
             
             # Format timestamp
             timestamp = result.message.timestamp[:10] if result.message.timestamp else "Unknown"
@@ -506,7 +508,8 @@ class MainWindow:
         self.details_text.delete(1.0, tk.END)
         
         details = f"Author: {result.message.author.nickname or result.message.author.name}\n"
-        details += f"Similarity: {result.similarity_score * 100:.1f}%\n"
+        # Convert cosine similarity (-1 to 1) to percentage (0% to 100%)
+        details += f"Similarity: {(result.similarity_score + 1) * 50:.1f}%\n"
         details += f"Timestamp: {result.message.timestamp}\n"
         details += f"Content: {result.message.content[:200]}{'...' if len(result.message.content) > 200 else ''}\n"
         details += f"Discord URL: {result.discord_url}"

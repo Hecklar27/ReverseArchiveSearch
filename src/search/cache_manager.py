@@ -84,7 +84,7 @@ class EmbeddingCacheManager:
         self.parsed_metadata_file = self.cache_dir / "parsed_metadata.pkl"
         
         self.clip_engine = CLIPEngine(config.clip)
-        self.image_downloader = ImageDownloader(timeout=10, max_retries=3, max_workers=8)
+        self.image_downloader = ImageDownloader(max_workers=8)  # Use same config as real-time search
         
         self._embeddings = None
         self._metadata = None
@@ -227,8 +227,14 @@ class EmbeddingCacheManager:
         metadata.clip_model = self.clip_engine.model_name  # Set CLIP model for validation
         processed_count = 0
         
-        # Process in batches
-        batch_size = 32
+        # Process in optimized batches
+        batch_size = self.config.cache.batch_size  # Default 32
+        
+        # Reduce batch size for larger CLIP models to improve responsiveness and prevent getting stuck
+        if self.clip_engine.model_name in ["ViT-L/14", "ViT-L/14@336px", "RN50x64"]:
+            batch_size = max(8, batch_size // 2)  # Reduce to 16 for large models, min 8
+            logger.info(f"Using reduced batch size {batch_size} for large model {self.clip_engine.model_name}")
+        
         for batch_start in range(0, total_images, batch_size):
             batch_end = min(batch_start + batch_size, total_images)
             batch_info = image_info[batch_start:batch_end]
@@ -256,14 +262,22 @@ class EmbeddingCacheManager:
                     stats.failed_downloads += 1
             
             if downloaded_images:
+                batch_num = batch_start // batch_size + 1
                 if progress_callback:
                     progress_callback(processed_count, total_images, 
-                                    f"Encoding batch {batch_start//batch_size + 1} with CLIP...")
+                                    f"Encoding batch {batch_num} ({len(downloaded_images)} images) with CLIP...")
                 
                 # Encode images with CLIP
                 try:
-                    logger.info(f"Encoding {len(downloaded_images)} images with CLIP")
+                    logger.info(f"Encoding {len(downloaded_images)} images with CLIP (batch {batch_num})")
+                    start_clip_time = time.time()
                     batch_embeddings = self.clip_engine.encode_images_batch(downloaded_images)
+                    clip_time = time.time() - start_clip_time
+                    logger.info(f"CLIP encoding completed in {clip_time:.2f}s for batch {batch_num}")
+                    
+                    if progress_callback:
+                        progress_callback(processed_count, total_images, 
+                                        f"Storing batch {batch_num} embeddings...")
                     
                     # Store embeddings and metadata
                     for j, ((message, attachment), embedding) in enumerate(zip(valid_batch_info, batch_embeddings)):
@@ -276,13 +290,14 @@ class EmbeddingCacheManager:
                         
                         processed_count += 1
                         stats.processed_images += 1
-                        
-                        if progress_callback:
-                            progress_callback(processed_count, total_images, 
-                                            f"Cached {attachment.filename}")
+                    
+                    # Update progress once per batch instead of per image
+                    if progress_callback:
+                        progress_callback(processed_count, total_images, 
+                                        f"Completed batch {batch_num} - cached {processed_count}/{total_images} images")
                 
                 except Exception as e:
-                    logger.error(f"Failed to process batch: {e}")
+                    logger.error(f"Failed to process batch {batch_num}: {e}")
                     continue
         
         if not all_embeddings:
@@ -307,6 +322,9 @@ class EmbeddingCacheManager:
         
         # Convert to numpy array
         embeddings_array = np.array(all_embeddings)
+        
+        # Set total_images in metadata to actual count of processed embeddings
+        metadata.total_images = len(all_embeddings)
         
         if progress_callback:
             cache_status = "Saving cache..."
@@ -414,6 +432,12 @@ class EmbeddingCacheManager:
         if metadata:
             stats = metadata.get_stats()
             stats['status'] = 'valid'
+            
+            # Fallback: if total_images is 0 in metadata, use actual embedding count
+            if stats.get('total_images', 0) == 0:
+                embeddings = self.get_embeddings()
+                if embeddings is not None:
+                    stats['total_images'] = len(embeddings)
             
             # Add file sizes
             try:

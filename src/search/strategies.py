@@ -88,8 +88,14 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
             logger.error(f"Failed to encode user image: {e}")
             raise
         
-        # Process in batches for better performance
-        batch_size = 32  # Adjust based on GPU memory
+        # Process Discord images in optimized batches
+        batch_size = self.config.cache.batch_size  # Default 32
+        
+        # Reduce batch size for larger CLIP models to improve responsiveness
+        if self.clip_engine.model_name in ["ViT-L/14", "ViT-L/14@336px", "RN50x64"]:
+            batch_size = max(8, batch_size // 2)  # Reduce to 16 for large models, min 8
+            logger.info(f"Using reduced batch size {batch_size} for large model {self.clip_engine.model_name}")
+        
         results = []
         processed_count = 0
         
@@ -121,21 +127,30 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
                     stats.failed_downloads += 1
             
             if downloaded_images:
-                # Update progress for CLIP processing
+                # Update progress for CLIP processing - this is the slow part with ViT-L/14
+                batch_num = batch_start // batch_size + 1
                 if progress_callback:
                     progress_callback(processed_count, stats.total_images, 
-                                    f"Processing batch {batch_start//batch_size + 1} with CLIP...")
+                                    f"Encoding batch {batch_num} ({len(downloaded_images)} images) with CLIP...")
                 
                 # Encode images in batch with CLIP
                 try:
-                    logger.info(f"Encoding {len(downloaded_images)} images with CLIP")
+                    logger.info(f"Encoding {len(downloaded_images)} images with CLIP (batch {batch_num})")
+                    start_clip_time = time.time()
                     batch_embeddings = self.clip_engine.encode_images_batch(downloaded_images)
+                    clip_time = time.time() - start_clip_time
+                    logger.info(f"CLIP encoding completed in {clip_time:.2f}s for batch {batch_num}")
+                    
+                    # Update progress after CLIP encoding
+                    if progress_callback:
+                        progress_callback(processed_count, stats.total_images, 
+                                        f"Calculating similarities for batch {batch_num}...")
                     
                     # Calculate similarities for this batch
                     similarities = self.clip_engine.calculate_similarities_batch(
                         user_embedding, batch_embeddings)
                     
-                    # Create search results
+                    # Create search results (reduce progress update frequency)
                     for i, ((message, attachment), similarity) in enumerate(zip(valid_batch_info, similarities)):
                         # Generate Discord URL
                         discord_url = self.config.discord.get_message_url(message.id)
@@ -152,15 +167,15 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
                         
                         processed_count += 1
                         
-                        # Update progress
-                        if progress_callback:
-                            progress_callback(processed_count, stats.total_images, 
-                                            f"Processed {attachment.filename}")
-                        
                         logger.debug(f"Processed image {attachment.filename}: similarity={similarity:.3f}")
+                    
+                    # Update progress once per batch instead of per image
+                    if progress_callback:
+                        progress_callback(processed_count, stats.total_images, 
+                                        f"Completed batch {batch_num} - processed {processed_count}/{stats.total_images} images")
                         
                 except Exception as e:
-                    logger.error(f"Failed to process batch: {e}")
+                    logger.error(f"Failed to process batch {batch_num}: {e}")
                     # Skip this batch but continue with others
                     processed_count += len(valid_batch_info)
                     continue

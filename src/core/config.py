@@ -10,9 +10,9 @@ from typing import Optional
 @dataclass
 class ClipConfig:
     """Configuration for CLIP model"""
-    model_name: str = "ViT-B/32"
+    model_name: str = "ViT-L/14"
     device: str = "auto"  # auto, cuda, cpu
-    batch_size: int = 32
+    batch_size: int = 16
 
 @dataclass
 class UIConfig:

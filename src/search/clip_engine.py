@@ -164,26 +164,23 @@ class CLIPEngine:
         Calculate cosine similarity between two embeddings.
         
         Args:
-            embedding1: First image embedding
-            embedding2: Second image embedding
+            embedding1: First image embedding (should already be normalized)
+            embedding2: Second image embedding (should already be normalized)
             
         Returns:
-            Similarity score between 0 and 1 (higher = more similar)
+            Cosine similarity score between -1 and 1 (higher = more similar)
         """
         try:
-            # Ensure embeddings are normalized
-            embedding1 = embedding1 / np.linalg.norm(embedding1)
-            embedding2 = embedding2 / np.linalg.norm(embedding2)
-            
-            # Calculate cosine similarity
+            # Calculate cosine similarity directly (embeddings are already normalized from CLIP)
             similarity = np.dot(embedding1, embedding2)
             
-            # Convert to 0-1 range (cosine similarity is -1 to 1)
-            return float((similarity + 1) / 2)
+            # Return raw cosine similarity (-1 to 1 range)
+            # This provides better discrimination between similar/dissimilar images
+            return float(similarity)
             
         except Exception as e:
             logger.error(f"Failed to calculate similarity: {e}")
-            return 0.0
+            return -1.0  # Return minimum similarity on error
     
     def calculate_similarities_batch(self, query_embedding: np.ndarray, 
                                    embeddings: np.ndarray) -> np.ndarray:
@@ -191,32 +188,38 @@ class CLIPEngine:
         Calculate similarities between one query and multiple embeddings.
         
         Args:
-            query_embedding: Query image embedding (1D array)
-            embeddings: Database embeddings (2D array, shape: n_images x embedding_dim)
+            query_embedding: Query image embedding (1D array, already normalized)
+            embeddings: Database embeddings (2D array, shape: n_images x embedding_dim, already normalized)
             
         Returns:
-            Array of similarity scores
+            Array of cosine similarity scores (-1 to 1 range)
         """
         try:
-            # Normalize query embedding
-            query_embedding = query_embedding / np.linalg.norm(query_embedding)
+            # Calculate cosine similarities directly (embeddings are already normalized from CLIP)
+            similarities = np.dot(embeddings, query_embedding)
             
-            # Normalize database embeddings
-            embeddings_norm = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
-            
-            # Calculate cosine similarities
-            similarities = np.dot(embeddings_norm, query_embedding)
-            
-            # Convert to 0-1 range
-            return (similarities + 1) / 2
+            # Return raw cosine similarities for better discrimination
+            return similarities
             
         except Exception as e:
             logger.error(f"Failed to calculate batch similarities: {e}")
             return np.array([])
     
     def get_embedding_dimension(self) -> int:
-        """Get the dimension of CLIP embeddings"""
-        return 512  # ViT-B/32 embedding dimension
+        """Get the dimension of CLIP embeddings based on model"""
+        # Updated dimensions for different CLIP models
+        model_dimensions = {
+            "ViT-B/32": 512,
+            "ViT-B/16": 512, 
+            "ViT-L/14": 768,  # Larger model, larger embedding dimension
+            "ViT-L/14@336px": 768,
+            "RN50": 1024,
+            "RN101": 512,
+            "RN50x4": 640,
+            "RN50x16": 768,
+            "RN50x64": 1024
+        }
+        return model_dimensions.get(self.config.model_name, 768)  # Default to ViT-L/14 dimension
     
     @property
     def model_name(self) -> str:
