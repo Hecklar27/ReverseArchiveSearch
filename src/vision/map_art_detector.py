@@ -12,6 +12,7 @@ from typing import List, Tuple, Optional, Union
 from PIL import Image, ImageDraw
 from pathlib import Path
 import torch
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -685,6 +686,11 @@ class MapArtDetector:
         try:
             height, width = gray.shape
             
+            # Validate image dimensions
+            if height < 100 or width < 100:
+                logger.debug(f"Image too small for map art detection: {width}x{height}")
+                return []
+            
             # Use larger initial region for faster processing
             margin_x = int(width * 0.15)  # Reduced from 0.2
             margin_y = int(height * 0.15)
@@ -694,6 +700,11 @@ class MapArtDetector:
             y = margin_y
             w = width - 2 * margin_x
             h = height - 2 * margin_y
+            
+            # Validate initial region
+            if w <= 0 or h <= 0:
+                logger.debug(f"Invalid initial region: {w}x{h}")
+                return []
             
             # Quick validation with simplified detail check
             region = gray[y:y+h, x:x+w]
@@ -728,37 +739,71 @@ class MapArtDetector:
 
     def _fast_boundary_detection(self, gray: np.ndarray, initial_region: Tuple[int, int, int, int]) -> Optional[Tuple[int, int, int, int]]:
         """Fast boundary detection with reduced precision for batch processing."""
+        start_time = time.time()
+        timeout_seconds = 5.0  # Maximum 5 seconds per image
+        
         x, y, w, h = initial_region
         height, width = gray.shape
         
         # Use larger steps for faster processing
         step_size = max(5, min(w, h) // 20)
         
-        # Find boundaries with larger steps
-        left_boundary = self._find_boundary_fast(gray, x, y, w, h, 'left', step_size)
-        right_boundary = self._find_boundary_fast(gray, x, y, w, h, 'right', step_size)
-        top_boundary = self._find_boundary_fast(gray, x, y, w, h, 'top', step_size)
-        bottom_boundary = self._find_boundary_fast(gray, x, y, w, h, 'bottom', step_size)
+        # Ensure step_size is reasonable to prevent infinite loops
+        if step_size <= 0:
+            step_size = 5
         
-        # Calculate final bounding box
-        final_x = left_boundary
-        final_y = top_boundary
-        final_w = right_boundary - left_boundary
-        final_h = bottom_boundary - top_boundary
-        
-        # Validate boundaries
-        if final_w > 50 and final_h > 50 and final_x >= 0 and final_y >= 0:
-            return (final_x, final_y, final_w, final_h)
-        
-        return None
+        try:
+            # Find boundaries with larger steps and timeout protection
+            left_boundary = self._find_boundary_fast(gray, x, y, w, h, 'left', step_size, start_time, timeout_seconds)
+            if time.time() - start_time > timeout_seconds:
+                logger.debug("Timeout during left boundary detection")
+                return None
+                
+            right_boundary = self._find_boundary_fast(gray, x, y, w, h, 'right', step_size, start_time, timeout_seconds)
+            if time.time() - start_time > timeout_seconds:
+                logger.debug("Timeout during right boundary detection")
+                return None
+                
+            top_boundary = self._find_boundary_fast(gray, x, y, w, h, 'top', step_size, start_time, timeout_seconds)
+            if time.time() - start_time > timeout_seconds:
+                logger.debug("Timeout during top boundary detection")
+                return None
+                
+            bottom_boundary = self._find_boundary_fast(gray, x, y, w, h, 'bottom', step_size, start_time, timeout_seconds)
+            if time.time() - start_time > timeout_seconds:
+                logger.debug("Timeout during bottom boundary detection")
+                return None
+            
+            # Calculate final bounding box
+            final_x = left_boundary
+            final_y = top_boundary
+            final_w = right_boundary - left_boundary
+            final_h = bottom_boundary - top_boundary
+            
+            # Validate boundaries
+            if final_w > 50 and final_h > 50 and final_x >= 0 and final_y >= 0:
+                return (final_x, final_y, final_w, final_h)
+            
+            return None
+            
+        except Exception as e:
+            logger.debug(f"Fast boundary detection failed: {e}")
+            return None
 
     def _find_boundary_fast(self, gray: np.ndarray, x: int, y: int, w: int, h: int, 
-                           direction: str, step_size: int) -> int:
-        """Fast boundary detection with larger steps."""
+                           direction: str, step_size: int, start_time: float, timeout_seconds: float) -> int:
+        """Fast boundary detection with larger steps and timeout protection."""
         height, width = gray.shape
+        max_iterations = 100  # Prevent infinite loops
+        iteration_count = 0
         
         if direction == 'left':
             for offset in range(0, w // 2, step_size):
+                iteration_count += 1
+                if iteration_count > max_iterations or time.time() - start_time > timeout_seconds:
+                    logger.debug(f"Timeout/max iterations in left boundary detection")
+                    break
+                    
                 test_x = x + offset
                 if test_x >= width:
                     break
@@ -771,6 +816,11 @@ class MapArtDetector:
             
         elif direction == 'right':
             for offset in range(0, w // 2, step_size):
+                iteration_count += 1
+                if iteration_count > max_iterations or time.time() - start_time > timeout_seconds:
+                    logger.debug(f"Timeout/max iterations in right boundary detection")
+                    break
+                    
                 test_x = x + w - offset
                 if test_x <= x:
                     break
@@ -783,6 +833,11 @@ class MapArtDetector:
             
         elif direction == 'top':
             for offset in range(0, h // 2, step_size):
+                iteration_count += 1
+                if iteration_count > max_iterations or time.time() - start_time > timeout_seconds:
+                    logger.debug(f"Timeout/max iterations in top boundary detection")
+                    break
+                    
                 test_y = y + offset
                 if test_y >= height:
                     break
@@ -795,6 +850,11 @@ class MapArtDetector:
             
         elif direction == 'bottom':
             for offset in range(0, h // 2, step_size):
+                iteration_count += 1
+                if iteration_count > max_iterations or time.time() - start_time > timeout_seconds:
+                    logger.debug(f"Timeout/max iterations in bottom boundary detection")
+                    break
+                    
                 test_y = y + h - offset
                 if test_y <= y:
                     break

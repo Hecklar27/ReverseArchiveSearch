@@ -177,10 +177,22 @@ class CLIPEngine:
             logger.debug(f"Processing {len(images)} images with batch map art detection")
             start_time = time.time()
             
+            # Add timeout protection for batch processing
+            timeout_seconds = 30.0  # Maximum 30 seconds for entire batch
+            
             # Process all images in a single batch call
             batch_results = self.map_art_detector.process_images_batch(images)
             
             detection_time = time.time() - start_time
+            
+            # Check if processing took too long (potential hang)
+            if detection_time > timeout_seconds:
+                logger.warning(f"Map art batch detection took {detection_time:.2f}s (>{timeout_seconds}s), disabling for this session")
+                # Disable map art detection for this session to prevent further hangs
+                self.vision_config.enable_map_art_detection = False
+                self.map_art_detector = None
+                return images
+            
             logger.debug(f"Batch map art detection completed in {detection_time:.2f}s for {len(images)} images")
             
             processed_images = []
@@ -204,9 +216,12 @@ class CLIPEngine:
             return processed_images
                     
         except Exception as e:
-            logger.warning(f"Batch map art detection failed: {e}, falling back to individual processing")
-            # Fallback to individual processing
-            return [self._crop_map_art(image)[0] if self._crop_map_art(image) else image for image in images]
+            logger.warning(f"Batch map art detection failed: {e}, falling back to original images")
+            # On any error, disable map art detection for this session and return original images
+            logger.warning("Disabling map art detection for this session due to errors")
+            self.vision_config.enable_map_art_detection = False
+            self.map_art_detector = None
+            return images
     
     def encode_image(self, image: Union[str, Path, Image.Image]) -> np.ndarray:
         """
