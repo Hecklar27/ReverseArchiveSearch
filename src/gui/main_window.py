@@ -627,6 +627,7 @@ class MainWindow:
         # Re-enable buttons
         self.preprocess_button.config(state='normal')
         self.search_button.config(state='normal')
+        # Note: cached_search_button state is handled by _update_cache_status() above
     
     def _on_cache_build_error(self, error_message: str):
         """Handle cache build error"""
@@ -707,7 +708,24 @@ class MainWindow:
             self._show_error("Please load HTML archive file first")
             return
         
-        if not self.search_engine.has_cache():
+        # Enhanced cache validation with in-memory fallback
+        cache_available = False
+        
+        # First, try standard cache validation
+        if self.search_engine.has_cache():
+            cache_available = True
+            logger.info("Cache available via standard validation")
+        else:
+            # Fallback: check if cache is available in memory (newly built)
+            cache_manager = self.search_engine.cache_manager
+            if (hasattr(cache_manager, '_embeddings') and cache_manager._embeddings is not None and
+                hasattr(cache_manager, '_metadata') and cache_manager._metadata is not None):
+                cache_available = True
+                logger.info("Cache available via in-memory fallback - using newly built cache")
+            else:
+                logger.info("No cache available via any method")
+        
+        if not cache_available:
             self._show_error("No valid cache available. Please run 'Pre-process Archive' first.")
             return
         
@@ -803,9 +821,20 @@ class MainWindow:
                     self.cached_search_button.config(state='disabled')
                     self.clear_cache_button.config(state='normal')  # Allow clearing incompatible cache
             else:
-                self.cache_status_var.set("No cache")
-                self.cached_search_button.config(state='disabled')
-                self.clear_cache_button.config(state='disabled')
+                # Special case: check if cache was just built but validation is failing due to timing
+                cache_manager = self.search_engine.cache_manager
+                if (hasattr(cache_manager, '_embeddings') and cache_manager._embeddings is not None and
+                    hasattr(cache_manager, '_metadata') and cache_manager._metadata is not None):
+                    # Cache was just built and is in memory - trust it's valid
+                    logger.info("Cache validation failed but cache is available in memory - enabling cached search")
+                    embedding_count = len(cache_manager._embeddings)
+                    self.cache_status_var.set(f"✓ {embedding_count} images cached (newly built)")
+                    self.cached_search_button.config(state='normal')
+                    self.clear_cache_button.config(state='normal')
+                else:
+                    self.cache_status_var.set("No cache")
+                    self.cached_search_button.config(state='disabled')
+                    self.clear_cache_button.config(state='disabled')
                 
             # Enable pre-process button if we have Discord data
             if self.discord_messages:
@@ -816,6 +845,17 @@ class MainWindow:
         except Exception as e:
             logger.warning(f"Failed to update cache status: {e}")
             self.cache_status_var.set("Cache error")
+            # In case of error, try to enable cached search if we have in-memory cache
+            try:
+                cache_manager = self.search_engine.cache_manager
+                if (hasattr(cache_manager, '_embeddings') and cache_manager._embeddings is not None):
+                    logger.info("Cache status update failed but enabling cached search due to in-memory cache")
+                    self.cached_search_button.config(state='normal')
+                else:
+                    self.cached_search_button.config(state='disabled')
+            except Exception as inner_e:
+                logger.warning(f"Failed to check in-memory cache as fallback: {inner_e}")
+                self.cached_search_button.config(state='disabled')
     
     def _update_parsing_progress(self, progress_percent: float, progress_text: str):
         """Update HTML parsing progress"""

@@ -1,9 +1,0 @@
-2025-05-28 22:34:03 - root - INFO - Logging to file: logs\reverse_search_20250528_223403.log
-2025-05-28 22:34:03 - __main__ - INFO - Starting Reverse Archive Search application
-2025-05-28 22:34:03 - src.search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cpu
-2025-05-28 22:34:06 - src.search.clip_engine - INFO - 💻 Using CPU for CLIP processing
-2025-05-28 22:34:06 - src.search.clip_engine - INFO - CLIP model loaded successfully
-2025-05-28 22:34:06 - src.search.clip_engine - INFO - Loading CLIP model 'ViT-B/32' on device: cpu
-2025-05-28 22:34:09 - src.search.clip_engine - INFO - 💻 Using CPU for CLIP processing
-2025-05-28 22:34:09 - src.search.clip_engine - INFO - CLIP model loaded successfully
-2025-05-28 22:34:09 - src.gui.main_window - INFO - Device Status: Not available

@@ -45,11 +45,12 @@ class CacheMetadata:
         """Add metadata for an image at the given index"""
         self.index_to_metadata[index] = {
             'message_id': message.id,
-            'attachment_filename': attachment.filename,
-            'attachment_url': attachment.url,
+            'message_type': message.type,
+            'filename': attachment.filename,
+            'url': attachment.url,
             'author_name': message.author.name,
             'timestamp': message.timestamp,
-            'content': message.content[:100] if message.content else ""  # First 100 chars
+            'content': message.content[:100] if message.content else "",
         }
     
     def is_expired(self, max_age_days: int) -> bool:
@@ -75,7 +76,7 @@ class EmbeddingCacheManager:
     def __init__(self, config: Config):
         self.config = config
         self.cache_dir = Path(config.cache.cache_dir)
-        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
         
         self.embeddings_file = self.cache_dir / "embeddings.npy"
         self.metadata_file = self.cache_dir / "metadata.pkl"
@@ -144,6 +145,9 @@ class EmbeddingCacheManager:
     def _save_metadata(self, metadata: CacheMetadata) -> None:
         """Save cache metadata"""
         try:
+            # Ensure cache directory exists
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            
             metadata_path = self.metadata_file
             with open(metadata_path, 'wb') as f:
                 pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -164,6 +168,9 @@ class EmbeddingCacheManager:
     def _save_embeddings(self, embeddings: np.ndarray) -> None:
         """Save embeddings to cache"""
         try:
+            # Ensure cache directory exists
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            
             embeddings_path = self.embeddings_file
             with open(embeddings_path, 'wb') as f:
                 if self.config.cache.compression:
@@ -217,6 +224,7 @@ class EmbeddingCacheManager:
         # Initialize storage
         all_embeddings = []
         metadata = CacheMetadata()
+        metadata.clip_model = self.clip_engine.model_name  # Set CLIP model for validation
         processed_count = 0
         
         # Process in batches
@@ -334,13 +342,21 @@ class EmbeddingCacheManager:
     def load_cache(self) -> bool:
         """Load cache into memory"""
         try:
+            # Check if cache is already loaded in memory
+            if (self._embeddings is not None and self._metadata is not None):
+                logger.info(f"Cache already loaded in memory with {len(self._embeddings)} embeddings")
+                return True
+            
+            # Try to load from files
             if not self.has_valid_cache():
+                logger.info("No valid cache files found")
                 return False
             
             self._embeddings = self._load_embeddings()
             self._metadata = self._load_metadata()
             
             if self._embeddings is None or self._metadata is None:
+                logger.info("Failed to load cache data from files")
                 return False
             
             logger.info(f"Loaded cache with {len(self._embeddings)} embeddings")
@@ -499,6 +515,9 @@ class EmbeddingCacheManager:
     def save_parsed_messages(self, messages: List[DiscordMessage], html_file_path: str):
         """Save parsed Discord messages to cache"""
         try:
+            # Ensure cache directory exists
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            
             html_path = Path(html_file_path)
             html_mtime = html_path.stat().st_mtime
             

@@ -18,7 +18,7 @@ class ClipConfig:
 class UIConfig:
     """Configuration for user interface"""
     window_title: str = "Reverse Archive Search"
-    window_size: str = "800x600"
+    window_size: str = "900x800"
     max_results: int = 20
 
 @dataclass
@@ -72,7 +72,7 @@ class Config:
         config = cls()
         
         # Ensure cache directory exists
-        config.cache.cache_dir.mkdir(exist_ok=True)
+        config.cache.cache_dir.mkdir(parents=True, exist_ok=True)
         
         return config
     

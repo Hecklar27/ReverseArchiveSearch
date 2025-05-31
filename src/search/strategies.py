@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image
 from io import BytesIO
 
-from data.models import DiscordMessage, SearchResult, ProcessingStats, DiscordAttachment
+from data.models import DiscordMessage, SearchResult, ProcessingStats, DiscordAttachment, DiscordUser
 from core.config import Config
 from .clip_engine import CLIPEngine
 from .image_downloader import ImageDownloader
@@ -333,12 +333,27 @@ class CachedSearchStrategy(SearchStrategy):
         stats = ProcessingStats()
         stats.total_messages = len(discord_messages)
         
-        # Check if cache is available
-        if not self.cache_manager.has_valid_cache():
+        # Enhanced cache validation with in-memory fallback
+        cache_available = False
+        
+        # First, try standard cache validation
+        if self.cache_manager.has_valid_cache():
+            cache_available = True
+            logger.info("Cache validated via file-based checks")
+        else:
+            # Fallback: check if cache is available in memory (newly built)
+            if (hasattr(self.cache_manager, '_embeddings') and self.cache_manager._embeddings is not None and
+                hasattr(self.cache_manager, '_metadata') and self.cache_manager._metadata is not None):
+                cache_available = True
+                logger.info("Cache available via in-memory fallback - using newly built cache")
+            else:
+                logger.info("No cache available via any validation method")
+        
+        if not cache_available:
             logger.error("No valid cache available. Please run 'Pre-process Archive' first.")
             raise ValueError("No valid cache available. Please run 'Pre-process Archive' first.")
         
-        # Load cache if not already loaded
+        # Load cache if not already loaded (this should now work with in-memory cache)
         if not self.cache_manager.load_cache():
             logger.error("Failed to load cache. Please rebuild cache.")
             raise ValueError("Failed to load cache. Please rebuild cache.")
@@ -387,13 +402,20 @@ class CachedSearchStrategy(SearchStrategy):
                 cache_data = metadata.index_to_metadata[index]
                 
                 try:
-                    # Create dummy message and attachment objects for compatibility
-                    # In a real implementation, you might want to store these fully
+                    # Create proper DiscordUser object from cached author name
+                    author = DiscordUser(
+                        id="cached_author",
+                        name=cache_data.get('author_name', 'Unknown'),
+                        discriminator="0000",
+                        nickname=None  # Cache doesn't store nickname, so set to None
+                    )
+                    
+                    # Create dummy message with proper author object
                     message = DiscordMessage(
                         id=cache_data['message_id'],
                         type=cache_data['message_type'],
-                        content=cache_data.get('message_content', ''),
-                        author=cache_data.get('author', 'Unknown'),
+                        content=cache_data.get('content', ''),
+                        author=author,  # Now a proper DiscordUser object
                         timestamp=cache_data.get('timestamp', ''),
                         attachments=[]
                     )

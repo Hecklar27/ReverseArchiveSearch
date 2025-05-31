@@ -306,7 +306,7 @@ def main():
     
     packages_to_check = [
         "torch", "torchvision", "numpy", "clip", 
-        "PIL", "requests", "colorlog", "beautifulsoup4"
+        "PIL", "requests", "colorlog", "bs4"
     ]
     
     failed_imports = []
@@ -314,6 +314,8 @@ def main():
         try:
             if package == "PIL":
                 import PIL
+            elif package == "bs4":
+                import bs4
             else:
                 __import__(package)
             print(f"✓ {package}")
