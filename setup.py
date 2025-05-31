@@ -184,7 +184,9 @@ def cleanup_dependencies():
         "regex",
         "tqdm",
         "packaging",
-        "beautifulsoup4"
+        "beautifulsoup4",
+        "opencv-python",  # Computer vision for map art detection
+        "ultralytics"     # YOLO object detection (optional)
     ]
     
     print(f"\n🗑️  Removing packages: {', '.join(packages_to_remove)}")

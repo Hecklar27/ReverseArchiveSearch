@@ -44,7 +44,7 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
     
     def __init__(self, config: Config):
         self.config = config
-        self.clip_engine = CLIPEngine(config.clip)
+        self.clip_engine = CLIPEngine(config)
         self.image_downloader = ImageDownloader(max_workers=8)  # Concurrent downloads
         
     def search(self, user_image_path: Path, discord_messages: List[DiscordMessage],
@@ -214,7 +214,7 @@ class RealTimeSearchStrategy(SearchStrategy):
     
     def __init__(self, config: Config):
         self.config = config
-        self.clip_engine = CLIPEngine(config.clip)
+        self.clip_engine = CLIPEngine(config)
         self.image_downloader = ImageDownloader()
         
     def search(self, user_image_path: Path, discord_messages: List[DiscordMessage],
@@ -333,7 +333,7 @@ class CachedSearchStrategy(SearchStrategy):
     
     def __init__(self, config: Config):
         self.config = config
-        self.clip_engine = CLIPEngine(config.clip)
+        self.clip_engine = CLIPEngine(config)
         self.cache_manager = EmbeddingCacheManager(config)
         
     def search(self, user_image_path: Path, discord_messages: List[DiscordMessage],

@@ -8,11 +8,20 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 @dataclass
+class VisionConfig:
+    """Configuration for computer vision features"""
+    enable_map_art_detection: bool = True  # Enable AI-powered map art cropping
+    detection_method: str = "opencv"  # 'opencv', 'yolo', 'segment', 'hybrid'
+    confidence_threshold: float = 0.5  # Minimum confidence for detections
+    crop_padding: int = 10  # Extra padding around detected regions
+    fallback_to_full_image: bool = True  # Use full image if no map art detected
+
+@dataclass
 class ClipConfig:
     """Configuration for CLIP model"""
-    model_name: str = "ViT-L/14"
+    model_name: str = "ViT-L/14"  # Changed from ViT-B/32 for better map art detection
     device: str = "auto"  # auto, cuda, cpu
-    batch_size: int = 16
+    batch_size: int = 16  # Reduced batch size due to larger model
 
 @dataclass
 class UIConfig:
@@ -62,6 +71,7 @@ class Config:
     ui: UIConfig = field(default_factory=UIConfig)
     discord: DiscordConfig = field(default_factory=DiscordConfig)
     cache: CacheConfig = field(default_factory=CacheConfig)
+    vision: VisionConfig = field(default_factory=VisionConfig)
     
     # Data sources
     discord_archive_path: str = "mapart-archive.html"  # Changed from JSON to HTML

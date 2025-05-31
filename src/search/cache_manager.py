@@ -83,7 +83,7 @@ class EmbeddingCacheManager:
         self.parsed_messages_file = self.cache_dir / "parsed_messages.pkl"
         self.parsed_metadata_file = self.cache_dir / "parsed_metadata.pkl"
         
-        self.clip_engine = CLIPEngine(config.clip)
+        self.clip_engine = CLIPEngine(config)
         self.image_downloader = ImageDownloader(max_workers=8)  # Use same config as real-time search
         
         self._embeddings = None
