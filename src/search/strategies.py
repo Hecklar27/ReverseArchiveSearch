@@ -7,7 +7,7 @@ import requests
 import time
 import numpy as np
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple, Callable
+from typing import List, Optional, Tuple, Callable, Dict, Any
 from pathlib import Path
 from PIL import Image
 from io import BytesIO
@@ -91,10 +91,27 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
         # Process Discord images in optimized batches
         batch_size = self.config.cache.batch_size  # Default 32
         
-        # Reduce batch size for larger CLIP models to improve responsiveness
+        # Use model-specific optimal batch size
+        optimal_batch_size = self.config.clip.get_optimal_batch_size()
+        batch_size = optimal_batch_size
+        logger.info(f"Using optimal batch size {batch_size} for model {self.clip_engine.model_name}")
+        
+        # Aggressive batch size reduction for performance and memory management
         if self.clip_engine.model_name in ["ViT-L/14", "ViT-L/14@336px", "RN50x64"]:
-            batch_size = max(8, batch_size // 2)  # Reduce to 16 for large models, min 8
+            # Use much smaller batches for large models to prevent GPU memory issues
+            batch_size = 8  # Reduced from 16 to 8 for better memory management
             logger.info(f"Using reduced batch size {batch_size} for large model {self.clip_engine.model_name}")
+        elif self.clip_engine.model_name in ["ViT-B/32", "ViT-B/16"]:
+            # Smaller models can handle larger batches but still be conservative
+            batch_size = min(16, batch_size)  # Max 16 for smaller models
+            logger.info(f"Using optimized batch size {batch_size} for model {self.clip_engine.model_name}")
+        
+        # Additional memory optimization
+        import torch
+        if torch.cuda.is_available():
+            # Clear GPU cache before starting
+            torch.cuda.empty_cache()
+            logger.info("Cleared GPU cache before real-time search")
         
         results = []
         processed_count = 0
@@ -141,6 +158,13 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
                     clip_time = time.time() - start_clip_time
                     logger.info(f"CLIP encoding completed in {clip_time:.2f}s for batch {batch_num}")
                     
+                    # Memory cleanup after CLIP processing
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    
+                    # Clear downloaded images from memory immediately after encoding
+                    downloaded_images.clear()
+                    
                     # Update progress after CLIP encoding
                     if progress_callback:
                         progress_callback(processed_count, stats.total_images, 
@@ -169,6 +193,14 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
                         
                         logger.debug(f"Processed image {attachment.filename}: similarity={similarity:.3f}")
                     
+                    # Force garbage collection every few batches to prevent memory accumulation
+                    if batch_num % 5 == 0:
+                        import gc
+                        gc.collect()
+                        if torch.cuda.is_available():
+                            torch.cuda.empty_cache()
+                        logger.info(f"Performed memory cleanup after batch {batch_num}")
+                    
                     # Update progress once per batch instead of per image
                     if progress_callback:
                         progress_callback(processed_count, stats.total_images, 
@@ -176,6 +208,12 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
                         
                 except Exception as e:
                     logger.error(f"Failed to process batch {batch_num}: {e}")
+                    
+                    # Clear memory on error
+                    downloaded_images.clear()
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    
                     # Skip this batch but continue with others
                     processed_count += len(valid_batch_info)
                     continue
@@ -488,10 +526,14 @@ class SearchEngine:
     
     def __init__(self, config: Config):
         self.config = config
+        
+        # Initialize CLIP-based strategies only
         self.optimized_strategy = OptimizedRealTimeSearchStrategy(config)
         self.realtime_strategy = RealTimeSearchStrategy(config)
         self.cached_strategy = CachedSearchStrategy(config)
         self.cache_manager = EmbeddingCacheManager(config)
+        
+        logger.info("SearchEngine initialized with CLIP feature engine")
         
     def search(self, user_image_path: Path, discord_messages: List[DiscordMessage], 
                use_cache: bool = False, use_optimization: bool = True,
@@ -501,7 +543,7 @@ class SearchEngine:
         
         Args:
             user_image_path: Path to user's query image
-            discord_messages: List of Discord messages to search
+            discord_messages: List of Discord messages with image attachments
             use_cache: Whether to use cached search (Phase 2+)
             use_optimization: Whether to use optimized real-time search (default: True)
             progress_callback: Optional callback function (current, total, status)
@@ -511,7 +553,7 @@ class SearchEngine:
         """
         
         if use_cache:
-            logger.info("Using cached search strategy")
+            logger.info("Using cached search strategy with CLIP engine")
             try:
                 return self.cached_strategy.search(user_image_path, discord_messages, progress_callback)
             except ValueError as e:
@@ -526,42 +568,176 @@ class SearchEngine:
                 use_cache = False
         
         if use_optimization:
-            logger.info("Using optimized real-time search strategy")
+            logger.info("Using optimized real-time search strategy with CLIP engine")
             try:
                 return self.optimized_strategy.search(user_image_path, discord_messages, progress_callback)
             except Exception as e:
                 logger.warning(f"Optimized search failed, falling back to basic real-time: {e}")
                 return self.realtime_strategy.search(user_image_path, discord_messages, progress_callback)
         else:
-            logger.info("Using basic real-time search strategy")
+            logger.info("Using basic real-time search strategy with CLIP engine")
             return self.realtime_strategy.search(user_image_path, discord_messages, progress_callback)
     
     def build_cache(self, discord_messages: List[DiscordMessage],
                    progress_callback: Optional[Callable[[int, int, str], None]] = None) -> Tuple[bool, ProcessingStats]:
         """
-        Build embedding cache for faster searches.
+        Build CLIP embedding cache for faster searches.
         
         Args:
             discord_messages: Discord messages to process
-            progress_callback: Optional progress callback
+            progress_callback: Optional callback function (current, total, status)
             
         Returns:
-            Tuple of (success: bool, stats: ProcessingStats)
+            Tuple of (success, processing statistics)
         """
+        logger.info(f"Building CLIP cache for {len(discord_messages)} messages")
         return self.cache_manager.build_cache(discord_messages, progress_callback)
     
     def has_cache(self) -> bool:
-        """Check if valid cached embeddings are available"""
+        """Check if CLIP cache is available"""
         return self.cache_manager.has_valid_cache()
     
-    def get_cache_stats(self) -> dict:
-        """Get cache statistics"""
-        return self.cache_manager.get_cache_stats()
+    def clear_cache(self) -> bool:
+        """Clear CLIP cache"""
+        try:
+            self.cache_manager.clear_cache()
+            logger.info("CLIP cache cleared successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to clear CLIP cache: {e}")
+            return False
     
-    def clear_cache(self) -> None:
-        """Clear embedding cache"""
-        self.cache_manager.clear_cache()
+    def get_cache_info(self) -> Dict[str, Any]:
+        """Get cache information for CLIP engine only"""
+        try:
+            cache_stats = self.cache_manager.get_cache_stats()
+            
+            return {
+                'current_engine': 'clip',
+                'clip_cache_available': cache_stats.get('status') == 'valid',
+                'clip_cache_size_mb': cache_stats.get('embeddings_size_mb', 0),
+                'clip_cache_images': cache_stats.get('total_images', 0),
+                'clip_cache_created': cache_stats.get('created_at', 'Unknown'),
+                'clip_cache_age_days': cache_stats.get('age_days', 0)
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to get cache info: {e}")
+            return {
+                'current_engine': 'clip',
+                'clip_cache_available': False,
+                'error': str(e)
+            }
     
-    def get_device_info(self) -> dict:
-        """Get CLIP device information"""
-        return self.optimized_strategy.clip_engine.get_device_info() 
+    def switch_model(self, new_model_name: str):
+        """Switch CLIP model for all strategies"""
+        logger.info(f"Switching SearchEngine to model: {new_model_name}")
+        
+        # Update config
+        self.config.clip.model_name = new_model_name
+        
+        # Switch cache manager model
+        self.cache_manager.switch_model(new_model_name)
+        
+        # Reinitialize strategies with new model
+        self.optimized_strategy = OptimizedRealTimeSearchStrategy(self.config)
+        self.realtime_strategy = RealTimeSearchStrategy(self.config) 
+        self.cached_strategy = CachedSearchStrategy(self.config)
+        
+        logger.info(f"SearchEngine successfully switched to {new_model_name}")
+    
+    def get_all_cache_info(self) -> Dict[str, Any]:
+        """Get cache information for all available models"""
+        try:
+            all_cache_status = self.cache_manager.get_all_model_cache_status()
+            current_model = self.cache_manager.clip_engine.model_name
+            
+            return {
+                'current_model': current_model,
+                'all_models': all_cache_status,
+                'current_engine': 'clip'
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to get all cache info: {e}")
+            return {
+                'current_model': self.cache_manager.clip_engine.model_name,
+                'all_models': {},
+                'current_engine': 'clip',
+                'error': str(e)
+            }
+    
+    def clear_cache_for_model(self, model_name: str) -> bool:
+        """Clear cache for specific model"""
+        try:
+            self.cache_manager.clear_cache_for_model(model_name)
+            logger.info(f"Cache cleared for model {model_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to clear cache for model {model_name}: {e}")
+            return False
+
+    def cleanup(self):
+        """Properly cleanup SearchEngine and release GPU memory"""
+        try:
+            logger.info("Cleaning up SearchEngine resources")
+            
+            # Cleanup strategies
+            strategies = [self.optimized_strategy, self.realtime_strategy, self.cached_strategy]
+            for strategy in strategies:
+                if hasattr(strategy, 'clip_engine'):
+                    try:
+                        clip_engine = strategy.clip_engine
+                        if hasattr(clip_engine, 'model') and clip_engine.model is not None:
+                            # Move model to CPU before deletion
+                            clip_engine.model = clip_engine.model.cpu()
+                            del clip_engine.model
+                            clip_engine.model = None
+                        if hasattr(clip_engine, 'processor') and clip_engine.processor is not None:
+                            del clip_engine.processor
+                            clip_engine.processor = None
+                        logger.debug(f"Cleaned up CLIP engine for {strategy.__class__.__name__}")
+                    except Exception as e:
+                        logger.warning(f"Error cleaning up strategy {strategy.__class__.__name__}: {e}")
+            
+            # Cleanup cache manager
+            if hasattr(self, 'cache_manager') and self.cache_manager:
+                try:
+                    # Clear in-memory data
+                    self.cache_manager._embeddings = None
+                    self.cache_manager._metadata = None
+                    
+                    # Cleanup cache manager's CLIP engine
+                    if hasattr(self.cache_manager, 'clip_engine'):
+                        clip_engine = self.cache_manager.clip_engine
+                        if hasattr(clip_engine, 'model') and clip_engine.model is not None:
+                            clip_engine.model = clip_engine.model.cpu()
+                            del clip_engine.model
+                            clip_engine.model = None
+                        if hasattr(clip_engine, 'processor') and clip_engine.processor is not None:
+                            del clip_engine.processor
+                            clip_engine.processor = None
+                        logger.debug("Cleaned up cache manager CLIP engine")
+                        
+                except Exception as e:
+                    logger.warning(f"Error cleaning up cache manager: {e}")
+            
+            # Clear GPU cache
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                    torch.cuda.synchronize()
+                    logger.debug("GPU cache cleared")
+            except Exception as e:
+                logger.warning(f"Could not clear GPU cache: {e}")
+            
+            # Force garbage collection
+            import gc
+            gc.collect()
+            
+            logger.info("SearchEngine cleanup completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Error during SearchEngine cleanup: {e}")
+            raise 

@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Optional, List
 import threading
 import pickle
+from PIL import Image, ImageTk
+import requests
+from io import BytesIO
 
 from core.config import Config
 from data.discord_parser import DiscordParser
@@ -32,6 +35,7 @@ class MainWindow:
         self.current_results: List[SearchResult] = []
         self.user_image_path: Optional[Path] = None
         self.html_archive_path: Optional[Path] = None
+        self.selected_result_image: Optional[Image.Image] = None  # Store result image for display
         
         self._setup_window()
         self._create_widgets()
@@ -81,6 +85,33 @@ class MainWindow:
         search_frame = ttk.Frame(self.control_frame)
         search_frame.grid(row=2, column=0, columnspan=3, pady=(10, 0), sticky=tk.EW)
         
+        # Model Selection
+        model_frame = ttk.LabelFrame(search_frame, text="CLIP Model", padding="5")
+        model_frame.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Model dropdown
+        self.model_var = tk.StringVar()
+        model_options = self.config.clip.get_display_options()
+        self.model_dropdown = ttk.Combobox(model_frame, textvariable=self.model_var, 
+                                          values=model_options, state="readonly", width=25)
+        self.model_dropdown.pack(anchor=tk.W)
+        
+        # Set current model
+        current_model_display = self.config.clip.get_model_info(self.config.clip.model_name)["display_name"]
+        self.model_var.set(current_model_display)
+        
+        # Model info label
+        self.model_info_var = tk.StringVar()
+        self.model_info_label = ttk.Label(model_frame, textvariable=self.model_info_var, 
+                                         font=('TkDefaultFont', 8), wraplength=200)
+        self.model_info_label.pack(anchor=tk.W, pady=(2, 0))
+        
+        # Update model info
+        self._update_model_info()
+        
+        # Bind model selection change
+        self.model_dropdown.bind('<<ComboboxSelected>>', self._on_model_change)
+        
         # Real-time search button
         self.search_button = ttk.Button(search_frame, text="Search (Real-time)", 
                                        command=self._start_search)
@@ -114,6 +145,26 @@ class MainWindow:
         self.clear_cache_button = ttk.Button(cache_controls, text="Clear Cache", 
                                            command=self._clear_cache, state='disabled')
         self.clear_cache_button.pack(side=tk.LEFT)
+        
+        # Map Art Detection controls (moved to cache section)
+        map_art_controls = ttk.Frame(cache_frame)
+        map_art_controls.pack(fill=tk.X, pady=(5, 0))
+        
+        # Map art detection toggle
+        self.map_art_var = tk.BooleanVar(value=self.config.vision.enable_map_art_detection)
+        self.map_art_checkbox = ttk.Checkbutton(map_art_controls, text="Enable Map Art Detection",
+                                               variable=self.map_art_var,
+                                               command=self._on_map_art_toggle)
+        self.map_art_checkbox.pack(anchor=tk.W)
+        
+        # Map art status label
+        self.map_art_status_var = tk.StringVar()
+        self.map_art_status_label = ttk.Label(map_art_controls, textvariable=self.map_art_status_var,
+                                             font=('TkDefaultFont', 8), wraplength=200)
+        self.map_art_status_label.pack(anchor=tk.W, pady=(2, 0))
+        
+        # Update map art status
+        self._update_map_art_status()
         
         # Device info
         self.device_label = ttk.Label(search_frame, text="Device: Loading...")
@@ -172,17 +223,59 @@ class MainWindow:
         details_frame = ttk.LabelFrame(self.results_frame, text="Selected Result Details", padding="10")
         details_frame.pack(fill=tk.X, pady=(10, 0))
         
-        self.details_text = tk.Text(details_frame, height=4, wrap=tk.WORD, state='disabled')
-        details_scrollbar = ttk.Scrollbar(details_frame, orient=tk.VERTICAL, command=self.details_text.yview)
+        # Create main details container with two sections
+        details_container = ttk.Frame(details_frame)
+        details_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Left side: Text details
+        text_details_frame = ttk.Frame(details_container)
+        text_details_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        self.details_text = tk.Text(text_details_frame, height=4, wrap=tk.WORD, state='disabled')
+        details_scrollbar = ttk.Scrollbar(text_details_frame, orient=tk.VERTICAL, command=self.details_text.yview)
         self.details_text.configure(yscrollcommand=details_scrollbar.set)
         
         self.details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         details_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # Discord link button
-        self.discord_link_button = ttk.Button(details_frame, text="Open in Discord", 
+        # Right side: Image preview (only show if map detection is enabled)
+        if self.config.vision.enable_map_art_detection:
+            image_preview_frame = ttk.LabelFrame(details_container, text="Map Art Preview", padding="5")
+            image_preview_frame.pack(side=tk.RIGHT, padx=(10, 0))
+            
+            # Image preview canvas
+            self.result_preview_canvas = tk.Canvas(image_preview_frame, width=200, height=150, bg='lightgray')
+            self.result_preview_canvas.pack()
+            
+            # Preview status
+            self.preview_status_var = tk.StringVar(value="Select a result to see cropped map")
+            self.preview_status_label = ttk.Label(image_preview_frame, textvariable=self.preview_status_var, 
+                                                 font=('TkDefaultFont', 8), wraplength=190)
+            self.preview_status_label.pack(pady=(5, 0))
+            
+            # Initialize with empty preview
+            self._clear_result_preview()
+        else:
+            # Initialize empty attributes when map detection is disabled
+            self.result_preview_canvas = None
+            self.preview_status_var = None
+            self.preview_status_label = None
+        
+        # Discord link button (below both sections)
+        button_frame = ttk.Frame(details_frame)
+        button_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        self.discord_link_button = ttk.Button(button_frame, text="Open in Discord", 
                                             command=self._open_discord_link, state='disabled')
-        self.discord_link_button.pack(side=tk.BOTTOM, pady=(10, 0))
+        self.discord_link_button.pack(side=tk.LEFT)
+        
+        # Show original button (if map detection is enabled)
+        if self.config.vision.enable_map_art_detection:
+            self.show_original_button = ttk.Button(button_frame, text="Show Original Image", 
+                                                 command=self._show_original_result_image, state='disabled')
+            self.show_original_button.pack(side=tk.LEFT, padx=(10, 0))
+        else:
+            self.show_original_button = None
         
         # Bind result selection
         self.results_tree.bind('<<TreeviewSelect>>', self._on_result_select)
@@ -200,34 +293,53 @@ class MainWindow:
     def _show_device_info(self):
         """Update device information display"""
         try:
-            device_info = self.search_engine.get_device_info()
+            # CLIP engine - show GPU/CPU info
+            device_info = self.search_engine.optimized_strategy.clip_engine.get_device_info()
             
-            # Create detailed device text
-            device_text = f"Device: {device_info['device'].upper()}"
+            # Get current model info for performance display
+            model_info = self.config.clip.get_model_info(self.config.clip.model_name)
+            
+            device_text = f"Engine: CLIP {self.config.clip.model_name} ({device_info['device'].upper()})"
             
             if device_info.get('using_cuda', False):
                 # Using CUDA - show GPU info
                 gpu_name = device_info.get('gpu_name', 'Unknown GPU')
                 gpu_memory = device_info.get('gpu_memory_gb', 'Unknown')
-                device_text += f" ({gpu_name}, {gpu_memory}GB)"
+                device_text += f" - {gpu_name}, {gpu_memory}GB"
             elif device_info.get('gpu_available', False):
                 # CUDA available but not used
                 gpu_name = device_info.get('gpu_name', 'Unknown GPU')
-                device_text += f" (GPU available: {gpu_name} - not used)"
+                device_text += f" - GPU available: {gpu_name}"
             else:
                 # No CUDA support
-                device_text += " (No CUDA support)"
+                device_text += " - No CUDA"
+            
+            # Add model performance info
+            if model_info:
+                speed_rating = model_info.get('speed_rating', 'Unknown')
+                accuracy_rating = model_info.get('accuracy_rating', 'Unknown')
+                device_text += f" | Speed: {speed_rating}, Accuracy: {accuracy_rating}"
+            
+            # Show if map art detection is enabled
+            if self.config.vision.enable_map_art_detection:
+                device_text += " + Map Detection"
             
             self.device_label.config(text=device_text)
             
             # Log detailed info for debugging
+            logger.info("Engine: CLIP")
+            logger.info(f"Model: {self.config.clip.model_name}")
+            logger.info(f"Performance: {model_info.get('speed_rating', 'Unknown')} speed, {model_info.get('accuracy_rating', 'Unknown')} accuracy")
+            device_info = self.search_engine.optimized_strategy.clip_engine.get_device_info()
             logger.info(f"Device Status: {device_info.get('cuda_status', 'Unknown')}")
             if device_info.get('cuda_error'):
                 logger.warning(f"CUDA Error: {device_info['cuda_error']}")
                 
         except Exception as e:
-            self.device_label.config(text="Device: Error")
-            logger.warning(f"Failed to get device info: {e}")
+            # Fallback display
+            model_name = getattr(self.config.clip, 'model_name', 'Unknown')
+            self.device_label.config(text=f"Engine: CLIP {model_name} (Error)")
+            logger.warning(f"Failed to get device info for CLIP: {e}")
     
     def _browse_user_image(self):
         """Open file dialog to select user image"""
@@ -355,6 +467,9 @@ class MainWindow:
         def search_worker():
             try:
                 self._update_progress("Starting search...")
+                
+                # Update map preview to show actual image that will be used
+                # self.root.after(0, self._update_map_preview_during_search)
                 
                 results, stats = self.search_engine.search(
                     self.user_image_path, 
@@ -521,6 +636,190 @@ class MainWindow:
         
         # Enable Discord link button
         self.discord_link_button.config(state='normal')
+        
+        # Enable show original button if map detection is enabled
+        if self.show_original_button:
+            self.show_original_button.config(state='normal')
+        
+        # Load and preview the result image
+        self._load_result_image_preview(result)
+    
+    def _load_result_image_preview(self, result: SearchResult):
+        """Load and show the cropped version of a result image"""
+        if not self.config.vision.enable_map_art_detection or not hasattr(self, 'result_preview_canvas'):
+            return
+        
+        def load_worker():
+            """Background worker to download and process the image"""
+            try:
+                # Update status
+                self.root.after(0, lambda: self.preview_status_var.set("Downloading image..."))
+                
+                # Download the image
+                response = requests.get(result.attachment.url, timeout=10)
+                response.raise_for_status()
+                
+                # Load image
+                original_image = Image.open(BytesIO(response.content)).convert('RGB')
+                
+                # Update status
+                self.root.after(0, lambda: self.preview_status_var.set("Processing map detection..."))
+                
+                # Apply map art detection using the same logic as the search engines
+                cropped_images = self._apply_map_art_detection(original_image)
+                
+                if cropped_images:
+                    # Use the first (largest) cropped image - same as search engines
+                    cropped_image = cropped_images[0]
+                    
+                    # Store both images for toggling
+                    self.selected_result_image = cropped_image
+                    self.original_result_image = original_image
+                    
+                    # Display cropped version
+                    self.root.after(0, lambda: self._display_result_preview(cropped_image, True, len(cropped_images)))
+                    
+                else:
+                    # No map art detected
+                    if self.config.vision.fallback_to_full_image:
+                        # Store original image
+                        self.selected_result_image = original_image
+                        self.original_result_image = original_image
+                        
+                        # Display original
+                        self.root.after(0, lambda: self._display_result_preview(original_image, False, 0))
+                    else:
+                        # Clear preview
+                        self.root.after(0, lambda: self._clear_result_preview())
+                        self.root.after(0, lambda: self.preview_status_var.set("No map art detected, image skipped"))
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Failed to download result image: {e}")
+                self.root.after(0, lambda: self._clear_result_preview())
+                self.root.after(0, lambda: self.preview_status_var.set("Failed to download image"))
+                
+            except Exception as e:
+                logger.error(f"Failed to process result image: {e}")
+                self.root.after(0, lambda: self._clear_result_preview())
+                self.root.after(0, lambda: self.preview_status_var.set(f"Processing failed: {str(e)[:50]}..."))
+        
+        # Start download in background
+        threading.Thread(target=load_worker, daemon=True).start()
+    
+    def _apply_map_art_detection(self, image: Image.Image):
+        """Apply map art detection to an image using current engine settings"""
+        try:
+            # Import map art detector
+            from vision.map_art_detector import create_map_art_detector
+            
+            # Create detector with current settings
+            detector = create_map_art_detector(method=self.config.vision.detection_method)
+            
+            # Process image
+            cropped_images = detector.process_image(image)
+            return cropped_images
+            
+        except ImportError:
+            logger.warning("Map art detection module not available")
+            return []
+        except Exception as e:
+            logger.error(f"Map art detection failed: {e}")
+            return []
+    
+    def _display_result_preview(self, image: Image.Image, is_cropped: bool, num_regions: int):
+        """Display a result image in the preview canvas"""
+        try:
+            # Calculate display size while maintaining aspect ratio
+            canvas_width = 200
+            canvas_height = 150
+            
+            # Get image dimensions
+            img_width, img_height = image.size
+            
+            # Calculate scaling factor
+            scale_x = canvas_width / img_width
+            scale_y = canvas_height / img_height
+            scale = min(scale_x, scale_y)
+            
+            # Calculate display dimensions
+            display_width = int(img_width * scale)
+            display_height = int(img_height * scale)
+            
+            # Resize image for display
+            display_image = image.resize((display_width, display_height), Image.Resampling.LANCZOS)
+            
+            # Convert to PhotoImage
+            photo = ImageTk.PhotoImage(display_image)
+            
+            # Clear canvas and display image
+            self.result_preview_canvas.delete("all")
+            
+            # Center the image on canvas
+            x_offset = (canvas_width - display_width) // 2
+            y_offset = (canvas_height - display_height) // 2
+            
+            self.result_preview_canvas.create_image(x_offset, y_offset, anchor=tk.NW, image=photo)
+            
+            # Keep a reference to prevent garbage collection
+            self.result_preview_canvas.image = photo
+            
+            # Add border indicator
+            if is_cropped and num_regions > 0:
+                # Green border for cropped map art
+                self.result_preview_canvas.create_rectangle(x_offset-2, y_offset-2, 
+                                                          x_offset+display_width+2, y_offset+display_height+2,
+                                                          outline='green', width=2)
+                status_text = f"✅ Cropped map art ({num_regions} region{'s' if num_regions > 1 else ''} detected)"
+            else:
+                # Orange border for full image
+                self.result_preview_canvas.create_rectangle(x_offset-2, y_offset-2, 
+                                                          x_offset+display_width+2, y_offset+display_height+2,
+                                                          outline='orange', width=2)
+                if is_cropped:
+                    status_text = "⚠️ Using full image (no map art detected)"
+                else:
+                    status_text = "📋 Showing original image"
+            
+            # Update status
+            self.preview_status_var.set(status_text)
+            
+        except Exception as e:
+            logger.error(f"Failed to display result preview: {e}")
+            self._clear_result_preview()
+    
+    def _clear_result_preview(self):
+        """Clear the result preview canvas"""
+        if hasattr(self, 'result_preview_canvas') and self.result_preview_canvas:
+            self.result_preview_canvas.delete("all")
+            self.result_preview_canvas.create_text(100, 75, text="No preview", 
+                                                  fill='gray', font=('TkDefaultFont', 10))
+    
+    def _show_original_result_image(self):
+        """Toggle between showing cropped and original version of result image"""
+        if not hasattr(self, 'original_result_image') or not self.original_result_image:
+            return
+        
+        try:
+            # Check current button text to determine what to show
+            current_text = self.show_original_button.cget('text')
+            
+            if current_text == "Show Original Image":
+                # Currently showing cropped, switch to original
+                self._display_result_preview(self.original_result_image, False, 0)
+                self.show_original_button.config(text="Show Cropped Map")
+                
+            else:
+                # Currently showing original, switch to cropped
+                if hasattr(self, 'selected_result_image') and self.selected_result_image:
+                    # Determine if this is actually cropped or just the same as original
+                    if self.selected_result_image.size != self.original_result_image.size:
+                        self._display_result_preview(self.selected_result_image, True, 1)
+                    else:
+                        self._display_result_preview(self.selected_result_image, False, 0)
+                self.show_original_button.config(text="Show Original Image")
+                
+        except Exception as e:
+            logger.error(f"Failed to toggle result image: {e}")
     
     def _on_result_double_click(self, event):
         """Handle double-click on result"""
@@ -555,7 +854,21 @@ class MainWindow:
         self.details_text.config(state='disabled')
         self.discord_link_button.config(state='disabled')
         
+        # Disable show original button if it exists
+        if self.show_original_button:
+            self.show_original_button.config(state='disabled')
+        
+        # Clear result preview if map detection is enabled
+        if hasattr(self, 'result_preview_canvas') and self.result_preview_canvas:
+            self._clear_result_preview()
+            self.preview_status_var.set("Select a result to see cropped map")
+        
         self.current_results = []
+        
+        # Clear stored images
+        self.selected_result_image = None
+        if hasattr(self, 'original_result_image'):
+            self.original_result_image = None
     
     def _update_progress(self, message: str):
         """Update progress message"""
@@ -755,6 +1068,9 @@ class MainWindow:
         def search_worker():
             """Worker thread for cached search"""
             try:
+                # Update map preview to show actual image that will be used
+                # self.root.after(0, self._update_map_preview_during_search)
+                
                 results, stats = self.search_engine.search(
                     self.user_image_path, 
                     self.discord_messages, 
@@ -784,61 +1100,121 @@ class MainWindow:
         logger.error(f"Cached search error: {error_message}")
     
     def _clear_cache(self):
-        """Clear the embedding cache"""
-        if messagebox.askyesno("Clear Cache", 
-                              "Are you sure you want to clear the embedding cache?\n"
-                              "This will remove all pre-computed embeddings."):
-            try:
-                self.search_engine.clear_cache()
-                self._update_cache_status()
-                messagebox.showinfo("Cache Cleared", "Embedding cache cleared successfully.")
-                self.progress_var.set("Cache cleared")
-            except Exception as e:
-                self._show_error(f"Failed to clear cache: {e}")
+        """Clear the embedding cache with model-specific options"""
+        try:
+            # Get all cache info to show options
+            all_cache_info = self.search_engine.get_all_cache_info()
+            all_models = all_cache_info['all_models']
+            current_model = all_cache_info['current_model']
+            
+            # Check which models have caches
+            cached_models = [model for model, info in all_models.items() 
+                           if info.get('status') == 'valid']
+            
+            if not cached_models:
+                messagebox.showinfo("No Cache", "No caches found to clear.")
+                return
+            
+            # Create options dialog
+            if len(cached_models) == 1:
+                # Only one cache, simple confirmation
+                model_name = cached_models[0]
+                if messagebox.askyesno("Clear Cache", 
+                                      f"Are you sure you want to clear the {model_name} cache?\n"
+                                      f"This will remove all pre-computed embeddings for this model."):
+                    self.search_engine.clear_cache_for_model(model_name)
+                    self._update_cache_status()
+                    messagebox.showinfo("Cache Cleared", f"{model_name} cache cleared successfully.")
+                    self.progress_var.set(f"{model_name} cache cleared")
+            else:
+                # Multiple caches, show options
+                result = messagebox.askyesnocancel("Clear Cache", 
+                                                 f"Multiple caches found:\n"
+                                                 f"• {cached_models[0]} cache\n"
+                                                 f"• {cached_models[1]} cache\n\n"
+                                                 f"Yes = Clear current model ({current_model}) cache\n"
+                                                 f"No = Clear all model caches\n"
+                                                 f"Cancel = Don't clear anything")
+                
+                if result is True:
+                    # Clear current model cache
+                    self.search_engine.clear_cache_for_model(current_model)
+                    self._update_cache_status()
+                    messagebox.showinfo("Cache Cleared", f"{current_model} cache cleared successfully.")
+                    self.progress_var.set(f"{current_model} cache cleared")
+                    
+                elif result is False:
+                    # Clear all caches
+                    cleared_models = []
+                    for model_name in cached_models:
+                        try:
+                            self.search_engine.clear_cache_for_model(model_name)
+                            cleared_models.append(model_name)
+                        except Exception as e:
+                            logger.error(f"Failed to clear cache for {model_name}: {e}")
+                    
+                    self._update_cache_status()
+                    if cleared_models:
+                        messagebox.showinfo("Caches Cleared", 
+                                          f"Cleared caches for: {', '.join(cleared_models)}")
+                        self.progress_var.set(f"All caches cleared")
+                    
+        except Exception as e:
+            self._show_error(f"Failed to clear cache: {e}")
     
     def _update_cache_status(self):
         """Update cache status display"""
         try:
-            if self.search_engine.has_cache():
-                cache_stats = self.search_engine.get_cache_stats()
+            # Get cache info for all models
+            all_cache_info = self.search_engine.get_all_cache_info()
+            current_model = all_cache_info['current_model']
+            all_models = all_cache_info['all_models']
+            
+            # Get current model cache status
+            current_cache = all_models.get(current_model, {'status': 'no_cache'})
+            current_available = current_cache.get('status') == 'valid'
+            
+            # Build status text
+            if current_available:
+                # Show current model cache status
+                status_text = f"✓ {current_model} cache ready"
                 
-                if cache_stats.get('status') == 'valid':
-                    total_images = cache_stats.get('total_images', 0)
-                    age_days = cache_stats.get('age_days', 0)
-                    
-                    status_text = f"✓ {total_images} images cached"
-                    if age_days > 0:
-                        status_text += f" ({age_days}d old)"
-                    
-                    self.cache_status_var.set(status_text)
-                    self.cached_search_button.config(state='normal')
-                    self.clear_cache_button.config(state='normal')
-                else:
-                    # Check if cache is incompatible vs just invalid
-                    cache_manager = self.search_engine.cache_manager
-                    if cache_manager._load_metadata():  # Cache exists but invalid
-                        self.cache_status_var.set("⚠ Incompatible cache - rebuild needed")
+                # Add size info if available
+                if 'embeddings_size_mb' in current_cache:
+                    status_text += f" ({current_cache['embeddings_size_mb']:.1f}MB)"
+                
+                # Check other model cache status
+                other_models = [m for m in all_models.keys() if m != current_model]
+                if other_models:
+                    other_model = other_models[0]
+                    other_cache = all_models.get(other_model, {'status': 'no_cache'})
+                    if other_cache.get('status') == 'valid':
+                        status_text += f" | ✓ {other_model} cached"
                     else:
-                        self.cache_status_var.set("⚠ Invalid cache")
-                    
-                    self.cached_search_button.config(state='disabled')
-                    self.clear_cache_button.config(state='normal')  # Allow clearing incompatible cache
-            else:
-                # Special case: check if cache was just built but validation is failing due to timing
-                cache_manager = self.search_engine.cache_manager
-                if (hasattr(cache_manager, '_embeddings') and cache_manager._embeddings is not None and
-                    hasattr(cache_manager, '_metadata') and cache_manager._metadata is not None):
-                    # Cache was just built and is in memory - trust it's valid
-                    logger.info("Cache validation failed but cache is available in memory - enabling cached search")
-                    embedding_count = len(cache_manager._embeddings)
-                    self.cache_status_var.set(f"✓ {embedding_count} images cached (newly built)")
-                    self.cached_search_button.config(state='normal')
-                    self.clear_cache_button.config(state='normal')
-                else:
-                    self.cache_status_var.set("No cache")
-                    self.cached_search_button.config(state='disabled')
-                    self.clear_cache_button.config(state='disabled')
+                        status_text += f" | ○ {other_model} no cache"
                 
+                self.cache_status_var.set(status_text)
+                self.cached_search_button.config(state='normal')
+                self.clear_cache_button.config(state='normal')
+                
+            else:
+                # No cache for current model
+                status_text = f"○ {current_model} no cache"
+                
+                # Check if other models have cache
+                other_models = [m for m in all_models.keys() if m != current_model]
+                if other_models:
+                    other_model = other_models[0]
+                    other_cache = all_models.get(other_model, {'status': 'no_cache'})
+                    if other_cache.get('status') == 'valid':
+                        status_text += f" | ✓ {other_model} cached"
+                    else:
+                        status_text += f" | ○ {other_model} no cache"
+                
+                self.cache_status_var.set(status_text)
+                self.cached_search_button.config(state='disabled')
+                self.clear_cache_button.config(state='disabled')
+            
             # Enable pre-process button if we have Discord data
             if self.discord_messages:
                 self.preprocess_button.config(state='normal')
@@ -847,18 +1223,9 @@ class MainWindow:
                 
         except Exception as e:
             logger.warning(f"Failed to update cache status: {e}")
-            self.cache_status_var.set("Cache error")
-            # In case of error, try to enable cached search if we have in-memory cache
-            try:
-                cache_manager = self.search_engine.cache_manager
-                if (hasattr(cache_manager, '_embeddings') and cache_manager._embeddings is not None):
-                    logger.info("Cache status update failed but enabling cached search due to in-memory cache")
-                    self.cached_search_button.config(state='normal')
-                else:
-                    self.cached_search_button.config(state='disabled')
-            except Exception as inner_e:
-                logger.warning(f"Failed to check in-memory cache as fallback: {inner_e}")
-                self.cached_search_button.config(state='disabled')
+            self.cache_status_var.set("Cache status error")
+            self.cached_search_button.config(state='disabled')
+            self.clear_cache_button.config(state='disabled')
     
     def _update_parsing_progress(self, progress_percent: float, progress_text: str):
         """Update HTML parsing progress"""
@@ -920,3 +1287,296 @@ class MainWindow:
                 cache_manager.clear_parsed_messages()
             except:
                 pass 
+
+    def _update_model_info(self):
+        """Update model information display"""
+        try:
+            # Get current model info
+            model_info = self.config.clip.get_model_info(self.config.clip.model_name)
+            
+            # Update model info label
+            info_text = f"{model_info.get('description', 'No description')}"
+            self.model_info_var.set(info_text)
+            
+        except Exception as e:
+            logger.warning(f"Failed to update model info: {e}")
+            self.model_info_var.set("Model: Error")
+    
+    def _on_model_change(self, event):
+        """Handle model selection change"""
+        try:
+            selected_display = self.model_var.get()
+            new_model_name = self.config.clip.model_name_from_display(selected_display)
+            
+            if new_model_name == self.config.clip.model_name:
+                return  # No change
+            
+            logger.info(f"User selected model: {new_model_name}")
+            
+            # Show loading message
+            self.progress_var.set(f"Switching to {new_model_name}...")
+            self.root.update_idletasks()
+            
+            # Switch model in search engine
+            self.search_engine.switch_model(new_model_name)
+            
+            # Update model info display
+            self._update_model_info()
+            
+            # Update device info to reflect new model
+            self._show_device_info()
+            
+            # Update cache status for new model
+            self._update_cache_status()
+            
+            # Update map art status to show model-specific recommendations
+            self._update_map_art_status()
+            
+            self.progress_var.set(f"Switched to {new_model_name}")
+            logger.info(f"Successfully switched to model {new_model_name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to switch model: {e}")
+            self._show_error(f"Failed to switch model: {str(e)}")
+            
+            # Revert dropdown selection on error
+            current_display = self.config.clip.get_model_info(self.config.clip.model_name)["display_name"]
+            self.model_var.set(current_display)
+    
+    def _on_map_art_toggle(self):
+        """Handle map art detection toggle"""
+        try:
+            # Update the configuration
+            old_state = self.config.vision.enable_map_art_detection
+            new_state = self.map_art_var.get()
+            self.config.vision.enable_map_art_detection = new_state
+            
+            # Reinitialize the search engine's CLIP engine to apply the new setting
+            if old_state != new_state:
+                # Show progress and disable the checkbox during reinitialization
+                self.map_art_checkbox.config(state='disabled')
+                self.progress_var.set("Updating map art detection...")
+                self.progress_bar.grid()
+                self.progress_bar.config(mode='indeterminate')
+                self.progress_bar.start()
+                self.root.update_idletasks()
+                
+                def reinitialize_worker():
+                    """Background worker to reinitialize search engine"""
+                    try:
+                        # Properly dispose of old search engine using its cleanup method
+                        if hasattr(self, 'search_engine') and self.search_engine:
+                            try:
+                                logger.info("Cleaning up old SearchEngine before creating new one")
+                                self.search_engine.cleanup()
+                                del self.search_engine
+                                logger.info("Old SearchEngine disposed of successfully")
+                            except Exception as e:
+                                logger.warning(f"Error disposing old SearchEngine: {e}")
+                        
+                        # Additional GPU cache clearing
+                        try:
+                            import torch
+                            if torch.cuda.is_available():
+                                torch.cuda.empty_cache()
+                                torch.cuda.synchronize()
+                                logger.info("Additional GPU cache cleared before creating new SearchEngine")
+                        except Exception as e:
+                            logger.warning(f"Could not clear GPU cache: {e}")
+                        
+                        # Force garbage collection
+                        import gc
+                        gc.collect()
+                        
+                        # Now create the new search engine
+                        logger.info(f"Creating new SearchEngine with map art detection {'enabled' if new_state else 'disabled'}")
+                        new_search_engine = SearchEngine(self.config)
+                        
+                        # Prepare status information in background thread
+                        try:
+                            # Get device info
+                            device_info = new_search_engine.optimized_strategy.clip_engine.get_device_info()
+                            model_info = self.config.clip.get_model_info(self.config.clip.model_name)
+                            
+                            device_text = f"Engine: CLIP {self.config.clip.model_name} ({device_info['device'].upper()})"
+                            
+                            if device_info.get('using_cuda', False):
+                                gpu_name = device_info.get('gpu_name', 'Unknown GPU')
+                                gpu_memory = device_info.get('gpu_memory_gb', 'Unknown')
+                                device_text += f" - {gpu_name}, {gpu_memory}GB"
+                            elif device_info.get('gpu_available', False):
+                                gpu_name = device_info.get('gpu_name', 'Unknown GPU')
+                                device_text += f" - GPU available: {gpu_name}"
+                            else:
+                                device_text += " - No CUDA"
+                            
+                            if model_info:
+                                speed_rating = model_info.get('speed_rating', 'Unknown')
+                                accuracy_rating = model_info.get('accuracy_rating', 'Unknown')
+                                device_text += f" | Speed: {speed_rating}, Accuracy: {accuracy_rating}"
+                            
+                            if self.config.vision.enable_map_art_detection:
+                                device_text += " + Map Detection"
+                                
+                        except Exception as e:
+                            logger.warning(f"Failed to get device info: {e}")
+                            device_text = f"Engine: CLIP {self.config.clip.model_name} (Error)"
+                        
+                        # Prepare map art status
+                        try:
+                            if self.config.vision.enable_map_art_detection:
+                                current_model = self.config.clip.model_name
+                                if current_model == "ViT-L/14":
+                                    map_art_status = "Enabled - Recommended with ViT-L/14. Slows cache building."
+                                else:
+                                    map_art_status = "Enabled - Slower cache building. Recommend ViT-L/14 for best results."
+                            else:
+                                map_art_status = "Disabled - Faster cache building, uses full images"
+                        except Exception as e:
+                            logger.error(f"Failed to prepare map art status: {e}")
+                            map_art_status = "Status: Error"
+                        
+                        # Update in main thread with prepared data
+                        def update_ui():
+                            try:
+                                # Replace the search engine
+                                self.search_engine = new_search_engine
+                                
+                                # Update status displays with pre-computed values
+                                self.device_label.config(text=device_text)
+                                self.map_art_status_var.set(map_art_status)
+                                
+                                # Update cache status (this should be lightweight)
+                                self._update_cache_status_lightweight()
+                                
+                                # Hide progress and re-enable checkbox
+                                self.progress_bar.stop()
+                                self.progress_bar.grid_remove()
+                                self.map_art_checkbox.config(state='normal')
+                                self.progress_var.set("Ready")
+                                
+                                logger.info(f"Map art detection {'enabled' if new_state else 'disabled'}")
+                                
+                                # Show info message about the change (defer to avoid blocking)
+                                self.root.after(100, lambda: self._show_map_art_toggle_message(new_state))
+                                
+                            except Exception as e:
+                                logger.error(f"Failed to update UI after map art toggle: {e}")
+                                self._handle_toggle_error(old_state, str(e))
+                        
+                        self.root.after(0, update_ui)
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to reinitialize search engine: {e}")
+                        error_msg = str(e)
+                        self.root.after(0, lambda: self._handle_toggle_error(old_state, error_msg))
+                
+                # Start reinitialization in background thread
+                threading.Thread(target=reinitialize_worker, daemon=True).start()
+                
+        except Exception as e:
+            logger.error(f"Failed to toggle map art detection: {e}")
+            self._handle_toggle_error(old_state, str(e))
+
+    def _handle_toggle_error(self, old_state: bool, error_message: str):
+        """Handle errors during map art detection toggle"""
+        try:
+            # Hide progress and re-enable checkbox
+            self.progress_bar.stop()
+            self.progress_bar.grid_remove()
+            self.map_art_checkbox.config(state='normal')
+            
+            # Revert the checkbox state on error
+            self.map_art_var.set(old_state)
+            self.config.vision.enable_map_art_detection = old_state
+            
+            # Update status
+            self._update_map_art_status()
+            self.progress_var.set("Ready")
+            
+            # Show error message
+            self._show_error(f"Failed to toggle map art detection: {error_message}")
+            
+        except Exception as e:
+            logger.error(f"Failed to handle toggle error: {e}")
+            self.progress_var.set("Error")
+
+    def _update_map_art_status(self):
+        """Update map art detection status display"""
+        try:
+            if self.config.vision.enable_map_art_detection:
+                # Get current model for recommendation
+                current_model = self.config.clip.model_name
+                if current_model == "ViT-L/14":
+                    status_text = "Enabled - Recommended with ViT-L/14. Slows cache building."
+                else:
+                    status_text = "Enabled - Slower cache building. Recommend ViT-L/14 for best results."
+            else:
+                status_text = "Disabled - Faster cache building, uses full images"
+            self.map_art_status_var.set(status_text)
+        except Exception as e:
+            logger.error(f"Failed to update map art detection status: {e}")
+            self.map_art_status_var.set("Status: Error")
+            
+    def _update_preview_visibility(self):
+        """Update visibility of preview elements based on map art detection setting"""
+        try:
+            # Note: For now, we keep the preview elements as they are created at startup
+            # In a future enhancement, we could dynamically show/hide preview elements
+            # This method is prepared for that enhancement
+            pass
+        except Exception as e:
+            logger.error(f"Failed to update preview visibility: {e}")
+
+    def _update_cache_status_lightweight(self):
+        """Lightweight cache status update that doesn't do heavy operations"""
+        try:
+            # Quick check if we have cache in memory
+            cache_manager = self.search_engine.cache_manager
+            current_model = self.config.clip.model_name
+            
+            if (hasattr(cache_manager, '_embeddings') and cache_manager._embeddings is not None and
+                hasattr(cache_manager, '_metadata') and cache_manager._metadata is not None):
+                # Cache available in memory
+                status_text = f"✓ {current_model} cache ready"
+                self.cache_status_var.set(status_text)
+                self.cached_search_button.config(state='normal')
+                self.clear_cache_button.config(state='normal')
+            else:
+                # No cache in memory, would need file check (defer this)
+                status_text = f"○ {current_model} checking cache..."
+                self.cache_status_var.set(status_text)
+                self.cached_search_button.config(state='disabled')
+                self.clear_cache_button.config(state='disabled')
+                
+                # Schedule full cache check for later
+                self.root.after(500, self._update_cache_status)
+            
+            # Enable pre-process button if we have Discord data
+            if self.discord_messages:
+                self.preprocess_button.config(state='normal')
+            else:
+                self.preprocess_button.config(state='disabled')
+                
+        except Exception as e:
+            logger.warning(f"Failed to update cache status (lightweight): {e}")
+            self.cache_status_var.set("Cache status error")
+
+    def _show_map_art_toggle_message(self, new_state: bool):
+        """Show the map art toggle information message"""
+        try:
+            if new_state:
+                current_model = self.config.clip.model_name
+                if current_model == "ViT-L/14":
+                    message = ("Map art detection enabled. Images will be analyzed to detect and crop map artwork before similarity search.\n\n"
+                             "Performance: This will slow down cache building but provides optimal accuracy with ViT-L/14.")
+                else:
+                    message = ("Map art detection enabled. Images will be analyzed to detect and crop map artwork before similarity search.\n\n"
+                             "Performance: This will slow down cache building for both models. For best results with map detection, consider switching to ViT-L/14.")
+                messagebox.showinfo("Map Art Detection", message)
+            else:
+                messagebox.showinfo("Map Art Detection", 
+                                  "Map art detection disabled. Full images will be used for similarity search.\n\n"
+                                  "Performance: This will speed up cache building but may reduce accuracy for map artwork searches.")
+        except Exception as e:
+            logger.error(f"Failed to show map art toggle message: {e}") 

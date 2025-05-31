@@ -78,107 +78,143 @@ class EmbeddingCacheManager:
         self.cache_dir = Path(config.cache.cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-        self.embeddings_file = self.cache_dir / "embeddings.npy"
-        self.metadata_file = self.cache_dir / "metadata.pkl"
-        self.parsed_messages_file = self.cache_dir / "parsed_messages.pkl"
-        self.parsed_metadata_file = self.cache_dir / "parsed_metadata.pkl"
-        
+        # Initialize CLIP engine
         self.clip_engine = CLIPEngine(config)
-        self.image_downloader = ImageDownloader(max_workers=8)  # Use same config as real-time search
+        self.image_downloader = ImageDownloader(timeout=10, max_retries=3, max_workers=8)
         
+        # Cache will be model-specific
         self._embeddings = None
         self._metadata = None
+        self._current_model = None
         
-    def has_valid_cache(self) -> bool:
-        """Check if valid cache exists"""
+    def _get_model_cache_paths(self, model_name: str = None):
+        """Get cache file paths for specific model"""
+        if model_name is None:
+            model_name = self.clip_engine.model_name
+            
+        model_cache_dir = self.config.cache.get_model_cache_dir(model_name)
+        model_cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        return {
+            'embeddings_file': model_cache_dir / "embeddings.npy",
+            'metadata_file': model_cache_dir / "metadata.pkl",
+            'parsed_messages_file': model_cache_dir / "parsed_messages.pkl",
+            'parsed_metadata_file': model_cache_dir / "parsed_metadata.pkl"
+        }
+    
+    def _load_cache_for_model(self, model_name: str):
+        """Load cache for specific model"""
+        paths = self._get_model_cache_paths(model_name)
+        
         try:
-            embeddings_path = self.embeddings_file
-            metadata_path = self.metadata_file
+            with open(paths['metadata_file'], 'rb') as f:
+                metadata = pickle.load(f)
+            
+            with open(paths['embeddings_file'], 'rb') as f:
+                embeddings = pickle.load(f)
+                
+            return embeddings, metadata
+        except Exception as e:
+            logger.warning(f"Failed to load cache for model {model_name}: {e}")
+            return None, None
+    
+    def has_valid_cache(self, model_name: str = None) -> bool:
+        """Check if valid cache exists for specific model"""
+        try:
+            if model_name is None:
+                model_name = self.clip_engine.model_name
+                
+            paths = self._get_model_cache_paths(model_name)
+            embeddings_path = paths['embeddings_file']
+            metadata_path = paths['metadata_file']
             
             if not (embeddings_path.exists() and metadata_path.exists()):
                 return False
             
             # Load and validate metadata
-            metadata = self._load_metadata()
+            metadata = self._load_metadata(model_name)
             if metadata is None:
                 return False
             
             # Check if cache is expired
             if metadata.is_expired(self.config.cache.max_age_days):
-                logger.info("Cache expired, needs regeneration")
+                logger.info(f"Cache for {model_name} expired, needs regeneration")
                 return False
             
             # Validate CLIP model compatibility
-            current_model = self.clip_engine.model_name
-            if metadata.clip_model != current_model:
-                logger.info(f"CLIP model changed ({metadata.clip_model} -> {current_model}), cache invalid")
+            if metadata.clip_model != model_name:
+                logger.info(f"CLIP model changed ({metadata.clip_model} -> {model_name}), cache invalid")
                 return False
             
             # Validate PyTorch version compatibility
             current_pytorch_version = torch.__version__
             cached_pytorch_version = getattr(metadata, 'pytorch_version', 'unknown')
             if cached_pytorch_version != current_pytorch_version:
-                logger.info(f"PyTorch version changed ({cached_pytorch_version} -> {current_pytorch_version}), cache invalid")
+                logger.info(f"PyTorch version changed ({cached_pytorch_version} -> {current_pytorch_version}), cache invalid for {model_name}")
                 return False
             
             # Validate cache version and required fields
             if not self._validate_cache_compatibility(metadata):
-                logger.info("Cache format is incompatible, needs rebuilding")
+                logger.info(f"Cache format is incompatible for {model_name}, needs rebuilding")
                 return False
             
             return True
             
         except Exception as e:
-            logger.warning(f"Error validating cache: {e}")
+            logger.warning(f"Error validating cache for {model_name}: {e}")
             return False
     
-    def _load_metadata(self) -> Optional[CacheMetadata]:
-        """Load cache metadata"""
+    def _load_metadata(self, model_name: str) -> Optional[CacheMetadata]:
+        """Load cache metadata for specific model"""
         try:
-            metadata_path = self.metadata_file
+            paths = self._get_model_cache_paths(model_name)
+            metadata_path = paths['metadata_file']
             with open(metadata_path, 'rb') as f:
                 return pickle.load(f)
         except Exception as e:
-            logger.warning(f"Failed to load cache metadata: {e}")
+            logger.warning(f"Failed to load cache metadata for {model_name}: {e}")
             return None
     
-    def _save_metadata(self, metadata: CacheMetadata) -> None:
-        """Save cache metadata"""
+    def _save_metadata(self, metadata: CacheMetadata, model_name: str) -> None:
+        """Save cache metadata for specific model"""
         try:
             # Ensure cache directory exists
             self.cache_dir.mkdir(parents=True, exist_ok=True)
             
-            metadata_path = self.metadata_file
+            paths = self._get_model_cache_paths(model_name)
+            metadata_path = paths['metadata_file']
             with open(metadata_path, 'wb') as f:
                 pickle.dump(metadata, f, protocol=pickle.HIGHEST_PROTOCOL)
         except Exception as e:
-            logger.error(f"Failed to save cache metadata: {e}")
+            logger.error(f"Failed to save cache metadata for {model_name}: {e}")
             raise
     
-    def _load_embeddings(self) -> Optional[np.ndarray]:
-        """Load cached embeddings"""
+    def _load_embeddings(self, model_name: str) -> Optional[np.ndarray]:
+        """Load cached embeddings for specific model"""
         try:
-            embeddings_path = self.embeddings_file
+            paths = self._get_model_cache_paths(model_name)
+            embeddings_path = paths['embeddings_file']
             with open(embeddings_path, 'rb') as f:
                 return pickle.load(f)
         except Exception as e:
-            logger.warning(f"Failed to load cached embeddings: {e}")
+            logger.warning(f"Failed to load cached embeddings for {model_name}: {e}")
             return None
     
-    def _save_embeddings(self, embeddings: np.ndarray) -> None:
-        """Save embeddings to cache"""
+    def _save_embeddings(self, embeddings: np.ndarray, model_name: str) -> None:
+        """Save embeddings to cache for specific model"""
         try:
             # Ensure cache directory exists
             self.cache_dir.mkdir(parents=True, exist_ok=True)
             
-            embeddings_path = self.embeddings_file
+            paths = self._get_model_cache_paths(model_name)
+            embeddings_path = paths['embeddings_file']
             with open(embeddings_path, 'wb') as f:
                 if self.config.cache.compression:
                     pickle.dump(embeddings, f, protocol=pickle.HIGHEST_PROTOCOL)
                 else:
                     pickle.dump(embeddings, f, protocol=pickle.HIGHEST_PROTOCOL)
         except Exception as e:
-            logger.error(f"Failed to save embeddings: {e}")
+            logger.error(f"Failed to save embeddings for {model_name}: {e}")
             raise
     
     def build_cache(self, discord_messages: List[DiscordMessage], 
@@ -227,13 +263,28 @@ class EmbeddingCacheManager:
         metadata.clip_model = self.clip_engine.model_name  # Set CLIP model for validation
         processed_count = 0
         
-        # Process in optimized batches
-        batch_size = self.config.cache.batch_size  # Default 32
+        # Use model-specific optimal batch size
+        optimal_batch_size = self.config.clip.get_optimal_batch_size()
+        batch_size = optimal_batch_size
+        logger.info(f"Using optimal batch size {batch_size} for model {self.clip_engine.model_name}")
         
-        # Reduce batch size for larger CLIP models to improve responsiveness and prevent getting stuck
+        # Aggressive batch size reduction for performance and memory management
         if self.clip_engine.model_name in ["ViT-L/14", "ViT-L/14@336px", "RN50x64"]:
-            batch_size = max(8, batch_size // 2)  # Reduce to 16 for large models, min 8
-            logger.info(f"Using reduced batch size {batch_size} for large model {self.clip_engine.model_name}")
+            # Use much smaller batches for large models to prevent GPU memory issues
+            batch_size = 8  # Reduced from 16 to 8 for better memory management
+            logger.info(f"PERFORMANCE OPTIMIZATION: Using reduced batch size {batch_size} for large model {self.clip_engine.model_name}")
+        elif self.clip_engine.model_name in ["ViT-B/32", "ViT-B/16"]:
+            # Smaller models can handle larger batches but still be conservative
+            batch_size = min(16, batch_size)  # Max 16 for smaller models
+            logger.info(f"PERFORMANCE OPTIMIZATION: Using optimized batch size {batch_size} for model {self.clip_engine.model_name}")
+        
+        logger.info(f"FINAL BATCH SIZE: {batch_size} images per batch (down from previous 32)")
+        
+        # Additional memory optimization
+        if torch.cuda.is_available():
+            # Clear GPU cache before starting
+            torch.cuda.empty_cache()
+            logger.info("PERFORMANCE OPTIMIZATION: Cleared GPU cache before processing")
         
         for batch_start in range(0, total_images, batch_size):
             batch_end = min(batch_start + batch_size, total_images)
@@ -275,6 +326,21 @@ class EmbeddingCacheManager:
                     clip_time = time.time() - start_clip_time
                     logger.info(f"CLIP encoding completed in {clip_time:.2f}s for batch {batch_num}")
                     
+                    # Memory cleanup after CLIP processing
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    
+                    # Clear downloaded images from memory immediately after encoding
+                    downloaded_images.clear()
+                    
+                    # Force garbage collection every few batches to prevent memory accumulation
+                    if batch_num % 5 == 0:
+                        import gc
+                        gc.collect()
+                        if torch.cuda.is_available():
+                            torch.cuda.empty_cache()
+                        logger.info(f"Performed memory cleanup after batch {batch_num}")
+                    
                     if progress_callback:
                         progress_callback(processed_count, total_images, 
                                         f"Storing batch {batch_num} embeddings...")
@@ -298,6 +364,12 @@ class EmbeddingCacheManager:
                 
                 except Exception as e:
                     logger.error(f"Failed to process batch {batch_num}: {e}")
+                    
+                    # Clear memory on error
+                    downloaded_images.clear()
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    
                     continue
         
         if not all_embeddings:
@@ -334,8 +406,8 @@ class EmbeddingCacheManager:
         
         # Save to cache
         try:
-            self._save_embeddings(embeddings_array)
-            self._save_metadata(metadata)
+            self._save_embeddings(embeddings_array, self.clip_engine.model_name)
+            self._save_metadata(metadata, self.clip_engine.model_name)
             
             # Cache in memory for immediate use
             self._embeddings = embeddings_array
@@ -370,8 +442,8 @@ class EmbeddingCacheManager:
                 logger.info("No valid cache files found")
                 return False
             
-            self._embeddings = self._load_embeddings()
-            self._metadata = self._load_metadata()
+            self._embeddings = self._load_embeddings(self.clip_engine.model_name)
+            self._metadata = self._load_metadata(self.clip_engine.model_name)
             
             if self._embeddings is None or self._metadata is None:
                 logger.info("Failed to load cache data from files")
@@ -399,8 +471,8 @@ class EmbeddingCacheManager:
     def clear_cache(self) -> None:
         """Clear cache files and memory"""
         try:
-            embeddings_path = self.embeddings_file
-            metadata_path = self.metadata_file
+            embeddings_path = self._get_model_cache_paths(self.clip_engine.model_name)['embeddings_file']
+            metadata_path = self._get_model_cache_paths(self.clip_engine.model_name)['metadata_file']
             
             if embeddings_path.exists():
                 embeddings_path.unlink()
@@ -441,8 +513,8 @@ class EmbeddingCacheManager:
             
             # Add file sizes
             try:
-                embeddings_path = self.embeddings_file
-                metadata_path = self.metadata_file
+                embeddings_path = self._get_model_cache_paths(self.clip_engine.model_name)['embeddings_file']
+                metadata_path = self._get_model_cache_paths(self.clip_engine.model_name)['metadata_file']
                 
                 if embeddings_path.exists():
                     stats['embeddings_size_mb'] = embeddings_path.stat().st_size / (1024 * 1024)
@@ -489,11 +561,11 @@ class EmbeddingCacheManager:
     def has_parsed_messages(self, html_file_path: str) -> bool:
         """Check if we have valid parsed messages for the given HTML file"""
         try:
-            if not self.parsed_messages_file.exists() or not self.parsed_metadata_file.exists():
+            if not self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'].exists() or not self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'].exists():
                 return False
             
             # Load metadata
-            with open(self.parsed_metadata_file, 'rb') as f:
+            with open(self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'], 'rb') as f:
                 metadata = pickle.load(f)
             
             # Check if HTML file path matches
@@ -523,10 +595,10 @@ class EmbeddingCacheManager:
     def load_parsed_messages(self) -> Optional[List[DiscordMessage]]:
         """Load previously parsed Discord messages"""
         try:
-            if not self.parsed_messages_file.exists():
+            if not self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'].exists():
                 return None
             
-            with open(self.parsed_messages_file, 'rb') as f:
+            with open(self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'], 'rb') as f:
                 messages = pickle.load(f)
             
             logger.info(f"Loaded {len(messages)} parsed Discord messages from cache")
@@ -546,12 +618,12 @@ class EmbeddingCacheManager:
             html_mtime = html_path.stat().st_mtime
             
             # Save messages
-            with open(self.parsed_messages_file, 'wb') as f:
+            with open(self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'], 'wb') as f:
                 pickle.dump(messages, f)
             
             # Save metadata
             metadata = ParsedMessagesMetadata(html_file_path, html_mtime, len(messages))
-            with open(self.parsed_metadata_file, 'wb') as f:
+            with open(self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'], 'wb') as f:
                 pickle.dump(metadata, f)
             
             logger.info(f"Saved {len(messages)} parsed Discord messages to cache")
@@ -562,14 +634,131 @@ class EmbeddingCacheManager:
     def clear_parsed_messages(self):
         """Clear saved parsed messages"""
         try:
-            if self.parsed_messages_file.exists():
-                self.parsed_messages_file.unlink()
+            if self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'].exists():
+                self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'].unlink()
                 logger.info("Cleared parsed messages cache")
             
-            if self.parsed_metadata_file.exists():
-                self.parsed_metadata_file.unlink()
+            if self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'].exists():
+                self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'].unlink()
                 logger.info("Cleared parsed messages metadata")
                 
         except Exception as e:
             logger.error(f"Failed to clear parsed messages: {e}")
+    
+    def get_all_model_cache_status(self) -> dict:
+        """Get cache status for all available models"""
+        status = {}
+        
+        for model_name in self.config.clip.get_available_models():
+            try:
+                if self.has_valid_cache(model_name):
+                    metadata = self._load_metadata(model_name)
+                    if metadata:
+                        model_stats = metadata.get_stats()
+                        model_stats['status'] = 'valid'
+                        
+                        # Add file sizes
+                        try:
+                            paths = self._get_model_cache_paths(model_name)
+                            embeddings_path = paths['embeddings_file']
+                            metadata_path = paths['metadata_file']
+                            
+                            if embeddings_path.exists():
+                                model_stats['embeddings_size_mb'] = embeddings_path.stat().st_size / (1024 * 1024)
+                            if metadata_path.exists():
+                                model_stats['metadata_size_mb'] = metadata_path.stat().st_size / (1024 * 1024)
+                                
+                        except Exception as e:
+                            logger.warning(f"Failed to get cache file sizes for {model_name}: {e}")
+                        
+                        status[model_name] = model_stats
+                    else:
+                        status[model_name] = {'status': 'invalid'}
+                else:
+                    status[model_name] = {'status': 'no_cache'}
+                    
+            except Exception as e:
+                logger.warning(f"Failed to get cache status for {model_name}: {e}")
+                status[model_name] = {'status': 'error', 'error': str(e)}
+        
+        return status
+    
+    def switch_model(self, new_model_name: str):
+        """Switch to a different CLIP model and update cache accordingly"""
+        if new_model_name == self.clip_engine.model_name:
+            logger.info(f"Already using model {new_model_name}")
+            return
+        
+        logger.info(f"Switching from {self.clip_engine.model_name} to {new_model_name}")
+        
+        # Clear current cache from memory
+        self._embeddings = None
+        self._metadata = None
+        self._current_model = None
+        
+        # Update CLIP engine with new model
+        old_model = self.clip_engine.model_name
+        self.clip_engine.model_name = new_model_name
+        
+        # Reinitialize CLIP engine with new model
+        try:
+            # Reload the CLIP model
+            import clip
+            self.clip_engine.model, self.clip_engine.preprocess = clip.load(new_model_name, device=self.clip_engine.device)
+            self.clip_engine.model_name = new_model_name
+            
+            # Update embedding dimensions
+            model_info = self.config.clip.get_model_info(new_model_name)
+            if model_info:
+                self.clip_engine.embedding_dim = model_info['embedding_dim']
+            
+            logger.info(f"Successfully switched to model {new_model_name}")
+            
+        except Exception as e:
+            # Rollback on failure
+            logger.error(f"Failed to switch to model {new_model_name}: {e}")
+            self.clip_engine.model_name = old_model
+            raise
+    
+    def clear_cache_for_model(self, model_name: str) -> None:
+        """Clear cache files for specific model"""
+        try:
+            paths = self._get_model_cache_paths(model_name)
+            embeddings_path = paths['embeddings_file']
+            metadata_path = paths['metadata_file']
+            parsed_messages_path = paths['parsed_messages_file']
+            parsed_metadata_path = paths['parsed_metadata_file']
+            
+            files_cleared = []
+            
+            if embeddings_path.exists():
+                embeddings_path.unlink()
+                files_cleared.append("embeddings")
+            
+            if metadata_path.exists():
+                metadata_path.unlink()
+                files_cleared.append("metadata")
+            
+            if parsed_messages_path.exists():
+                parsed_messages_path.unlink()
+                files_cleared.append("parsed messages")
+                
+            if parsed_metadata_path.exists():
+                parsed_metadata_path.unlink()
+                files_cleared.append("parsed metadata")
+            
+            # Clear from memory if it's the current model
+            if model_name == self.clip_engine.model_name:
+                self._embeddings = None
+                self._metadata = None
+                self._current_model = None
+            
+            if files_cleared:
+                logger.info(f"Cleared {model_name} cache: {', '.join(files_cleared)}")
+            else:
+                logger.info(f"No cache files found for {model_name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to clear cache for {model_name}: {e}")
+            raise
     

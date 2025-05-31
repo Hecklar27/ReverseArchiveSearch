@@ -35,6 +35,26 @@ class CLIPEngine:
         try:
             self.model, self.preprocess = clip.load(self.clip_config.model_name, device=self.device)
             self.model_name = self.clip_config.model_name
+            
+            # Enable model optimizations
+            self.model.eval()  # Set to evaluation mode
+            
+            # Enable mixed precision if using CUDA (but be more conservative)
+            self.use_mixed_precision = False  # Temporarily disable until we can fix type issues
+            if self.device == "cuda" and torch.cuda.is_available():
+                try:
+                    # Test if mixed precision works with this setup
+                    test_tensor = torch.randn(1, 3, 224, 224).cuda()
+                    with torch.cuda.amp.autocast():
+                        _ = self.model.encode_image(test_tensor)
+                    
+                    # If test passed, enable mixed precision
+                    self.use_mixed_precision = True
+                    logger.info("Mixed precision (FP16) tested and enabled for better performance")
+                except Exception as e:
+                    logger.warning(f"Mixed precision test failed, using FP32: {e}")
+                    self.use_mixed_precision = False
+            
             logger.info(f"CLIP model {self.model_name} loaded successfully")
             
         except Exception as e:
@@ -132,11 +152,19 @@ class CLIPEngine:
             image_tensor = self.preprocess(pil_image).unsqueeze(0).to(self.device)
             
             with torch.no_grad():
-                # Get image features
-                image_features = self.model.encode_image(image_tensor)
-                
-                # Normalize features
-                image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+                if self.use_mixed_precision:
+                    with torch.cuda.amp.autocast():
+                        # Get image features
+                        image_features = self.model.encode_image(image_tensor)
+                        
+                        # Normalize features
+                        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+                else:
+                    # Get image features
+                    image_features = self.model.encode_image(image_tensor)
+                    
+                    # Normalize features
+                    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
                 
                 # Convert to numpy
                 return image_features.cpu().numpy().flatten()
@@ -159,6 +187,39 @@ class CLIPEngine:
             return []
         
         try:
+            # Fast path: if map art detection is disabled, use efficient batch processing
+            if not self.vision_config.enable_map_art_detection:
+                # Use the original fast method - direct torch.stack
+                image_tensors = torch.stack([
+                    self.preprocess(img.convert('RGB')) for img in images
+                ]).to(self.device)
+                
+                with torch.no_grad():
+                    # Skip mixed precision for smaller models (ViT-B/32) as it adds overhead
+                    if self.use_mixed_precision and self.model_name in ["ViT-L/14", "ViT-L/14@336px"]:
+                        with torch.cuda.amp.autocast():
+                            image_features = self.model.encode_image(image_tensors)
+                            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+                    else:
+                        # Direct processing for better performance
+                        image_features = self.model.encode_image(image_tensors)
+                        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+                    
+                    # Return as list of numpy arrays for compatibility
+                    embeddings = []
+                    for i in range(image_features.shape[0]):
+                        embedding = image_features[i].cpu().numpy()
+                        embeddings.append(embedding)
+                    
+                    # Clear memory efficiently
+                    del image_tensors
+                    del image_features
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                    
+                    return embeddings
+            
+            # Slower path: map art detection enabled (original complex logic)
             processed_images = []
             
             # Apply map art detection to each image if enabled
@@ -187,27 +248,32 @@ class CLIPEngine:
                 logger.warning("No valid images after map art processing")
                 return []
             
-            # Preprocess all valid images
-            image_tensors = []
-            for img in valid_images:
-                tensor = self.preprocess(img.convert('RGB')).unsqueeze(0)
-                image_tensors.append(tensor)
-            
-            # Batch encode
-            batch_tensor = torch.cat(image_tensors, dim=0).to(self.device)
+            # Use efficient tensor creation even with map art detection
+            image_tensors = torch.stack([
+                self.preprocess(img.convert('RGB')) for img in valid_images
+            ]).to(self.device)
             
             with torch.no_grad():
-                # Get features for all images
-                image_features = self.model.encode_image(batch_tensor)
-                
-                # Normalize features
-                image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+                # Use mixed precision only for large models
+                if self.use_mixed_precision and self.model_name in ["ViT-L/14", "ViT-L/14@336px"]:
+                    with torch.cuda.amp.autocast():
+                        image_features = self.model.encode_image(image_tensors)
+                        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+                else:
+                    image_features = self.model.encode_image(image_tensors)
+                    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
                 
                 # Convert to list of numpy arrays
                 embeddings = []
                 for i in range(image_features.shape[0]):
                     embedding = image_features[i].cpu().numpy()
                     embeddings.append(embedding)
+                
+                # Clear memory efficiently
+                del image_tensors
+                del image_features
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
                 
                 return embeddings
                 

@@ -10,7 +10,7 @@ from typing import Optional
 @dataclass
 class VisionConfig:
     """Configuration for computer vision features"""
-    enable_map_art_detection: bool = True  # Enable AI-powered map art cropping
+    enable_map_art_detection: bool = True  # Enabled by default for better accuracy
     detection_method: str = "opencv"  # 'opencv', 'yolo', 'segment', 'hybrid'
     confidence_threshold: float = 0.5  # Minimum confidence for detections
     crop_padding: int = 10  # Extra padding around detected regions
@@ -19,9 +19,61 @@ class VisionConfig:
 @dataclass
 class ClipConfig:
     """Configuration for CLIP model"""
-    model_name: str = "ViT-L/14"  # Changed from ViT-B/32 for better map art detection
+    model_name: str = "ViT-L/14"  # Default to accurate but slow model
     device: str = "auto"  # auto, cuda, cpu
-    batch_size: int = 16  # Reduced batch size due to larger model
+    batch_size: int = 16  # Will be adjusted based on model
+    
+    # Model performance metadata
+    MODEL_OPTIONS = {
+        "ViT-L/14": {
+            "display_name": "ViT-L/14 (Accurate, Slow)",
+            "description": "High accuracy, slower processing (~2-5 minutes for cache build)",
+            "embedding_dim": 768,
+            "recommended_batch_size": 8,
+            "speed_rating": "Slow",
+            "accuracy_rating": "High"
+        },
+        "ViT-B/32": {
+            "display_name": "ViT-B/32 (Fast, Less Accurate)", 
+            "description": "Faster processing, lower accuracy (~30s-2min for cache build)",
+            "embedding_dim": 512,
+            "recommended_batch_size": 16,
+            "speed_rating": "Fast",
+            "accuracy_rating": "Good"
+        }
+    }
+    
+    @classmethod
+    def get_model_info(cls, model_name: str) -> dict:
+        """Get performance information for a specific model"""
+        return cls.MODEL_OPTIONS.get(model_name, {})
+    
+    @classmethod
+    def get_available_models(cls) -> list:
+        """Get list of available model names"""
+        return list(cls.MODEL_OPTIONS.keys())
+    
+    @classmethod
+    def get_display_options(cls) -> list:
+        """Get list of model display names for GUI dropdown"""
+        return [info["display_name"] for info in cls.MODEL_OPTIONS.values()]
+    
+    @classmethod
+    def model_name_from_display(cls, display_name: str) -> str:
+        """Convert display name back to model name"""
+        for model_name, info in cls.MODEL_OPTIONS.items():
+            if info["display_name"] == display_name:
+                return model_name
+        return "ViT-L/14"  # Default fallback
+    
+    def get_optimal_batch_size(self) -> int:
+        """Get optimal batch size for current model"""
+        model_info = self.get_model_info(self.model_name)
+        return model_info.get("recommended_batch_size", 16)
+    
+    def get_cache_subdirectory(self) -> str:
+        """Get cache subdirectory name for current model"""
+        return self.model_name.replace("/", "-").replace("@", "-")
 
 @dataclass
 class UIConfig:
@@ -49,20 +101,36 @@ class CacheConfig:
     metadata_file: str = "metadata.pkl"
     index_file: str = "urls_index.pkl"
     max_age_days: int = 30  # Cache expiry
-    batch_size: int = 32    # Batch size for pre-processing
+    batch_size: int = 32    # Default batch size, will be overridden by model-specific settings
     compression: bool = True  # Compress cache files
     
-    def get_embeddings_path(self) -> Path:
-        """Get path to embeddings cache file"""
-        return self.cache_dir / self.embeddings_file
+    def get_model_cache_dir(self, model_name: str) -> Path:
+        """Get cache directory for specific model"""
+        model_subdir = model_name.replace("/", "-").replace("@", "-")
+        return self.cache_dir / model_subdir
     
-    def get_metadata_path(self) -> Path:
-        """Get path to metadata cache file"""
-        return self.cache_dir / self.metadata_file
+    def get_embeddings_path(self, model_name: str = None) -> Path:
+        """Get path to embeddings cache file for specific model"""
+        if model_name:
+            return self.get_model_cache_dir(model_name) / self.embeddings_file
+        return self.cache_dir / self.embeddings_file  # Backward compatibility
     
-    def get_index_path(self) -> Path:
-        """Get path to URL index cache file"""
-        return self.cache_dir / self.index_file
+    def get_metadata_path(self, model_name: str = None) -> Path:
+        """Get path to metadata cache file for specific model"""
+        if model_name:
+            return self.get_model_cache_dir(model_name) / self.metadata_file
+        return self.cache_dir / self.metadata_file  # Backward compatibility
+    
+    def get_index_path(self, model_name: str = None) -> Path:
+        """Get path to URL index cache file for specific model"""
+        if model_name:
+            return self.get_model_cache_dir(model_name) / self.index_file
+        return self.cache_dir / self.index_file  # Backward compatibility
+
+@dataclass
+class FeatureConfig:
+    """Configuration for CLIP feature extraction engine"""
+    pass  # All CLIP settings are in ClipConfig
 
 @dataclass
 class Config:
@@ -72,6 +140,7 @@ class Config:
     discord: DiscordConfig = field(default_factory=DiscordConfig)
     cache: CacheConfig = field(default_factory=CacheConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
+    feature: FeatureConfig = field(default_factory=FeatureConfig)
     
     # Data sources
     discord_archive_path: str = "mapart-archive.html"  # Changed from JSON to HTML

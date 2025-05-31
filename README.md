@@ -1,34 +1,5 @@
 # Reverse Archive Search
 
-## Installation
-
-### 1. Virtual Environment Setup (Recommended)
-It's strongly recommended to use a virtual environment to avoid conflicts with other Python projects (run the commands in the project directory):
-
-**Create virtual environment:**
-```bash
-python -m venv .venv
-```
-
-**Activate virtual environment:**
-```bash
-# Windows
-.venv\Scripts\activate
-
-# Linux/Mac
-source .venv/bin/activate
-```
-
-**You'll know it's active when you see `(.venv)` in your prompt:**
-```bash
-(.venv) PS C:\Users\YourName\Desktop\ReverseArchiveSearch>
-```
-
-**To deactivate later:**
-```bash
-deactivate
-```
-
 ## Quick Start
 1. Install NVIDIA Cuda Toolkit (If you have an AMD card skip this step, will have to use CPU based processing)
    - the GPU detection is being funny, so if you installed CUDA and have an NVIDIA GPU, select PyTorch with CUDA (Option 2)
@@ -43,6 +14,8 @@ deactivate
 ## Performance Comparison
 - **Real-time Search**: 2+ minutes (downloads images on-demand)
 - **Cached Search**: 1-5 seconds (uses pre-computed embeddings)
+- **Mapart Detection**: Improves accuracy, but makes cache building slower
+**Different Clip Models**: L/14 is the most accurate, B/32 is the quickest. With Mapart Detection enabled, always use L/14
 
 ### Subsequent Searches after Caching
 - Click "Cached Search" for instant results
