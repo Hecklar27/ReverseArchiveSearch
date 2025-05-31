@@ -55,6 +55,9 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
         logger.info(f"Starting optimized real-time search with {len(discord_messages)} messages")
         start_time = time.time()
         
+        # Reset image downloader stats before starting
+        self.image_downloader.reset_stats()
+        
         # Initialize statistics
         stats = ProcessingStats()
         stats.total_messages = len(discord_messages)
@@ -177,11 +180,16 @@ class OptimizedRealTimeSearchStrategy(SearchStrategy):
         if len(results) > max_results:
             results = results[:max_results]
         
+        # Get download statistics and update ProcessingStats
+        download_stats = self.image_downloader.get_stats()
+        stats.expired_links = download_stats['expired_links']
+        
         # Finalize statistics
         stats.processing_time_seconds = time.time() - start_time
         
         logger.info(f"Optimized real-time search completed in {stats.processing_time_seconds:.2f}s")
         logger.info(f"Processed {stats.processed_images}/{stats.total_images} images successfully")
+        logger.info(f"Found {stats.expired_links} expired links")
         logger.info(f"Found {len(results)} results")
         
         return results, stats
@@ -201,6 +209,9 @@ class RealTimeSearchStrategy(SearchStrategy):
         """
         logger.info(f"Starting real-time search with {len(discord_messages)} messages")
         start_time = time.time()
+        
+        # Reset image downloader stats before starting
+        self.image_downloader.reset_stats()
         
         # Initialize statistics
         stats = ProcessingStats()
@@ -288,11 +299,16 @@ class RealTimeSearchStrategy(SearchStrategy):
         if len(results) > max_results:
             results = results[:max_results]
         
+        # Get download statistics and update ProcessingStats
+        download_stats = self.image_downloader.get_stats()
+        stats.expired_links = download_stats['expired_links']
+        
         # Finalize statistics
         stats.processing_time_seconds = time.time() - start_time
         
         logger.info(f"Real-time search completed in {stats.processing_time_seconds:.2f}s")
         logger.info(f"Processed {stats.processed_images}/{stats.total_images} images successfully")
+        logger.info(f"Found {stats.expired_links} expired links")
         logger.info(f"Found {len(results)} results")
         
         return results, stats
@@ -484,7 +500,7 @@ class SearchEngine:
             return self.realtime_strategy.search(user_image_path, discord_messages, progress_callback)
     
     def build_cache(self, discord_messages: List[DiscordMessage],
-                   progress_callback: Optional[Callable[[int, int, str], None]] = None) -> bool:
+                   progress_callback: Optional[Callable[[int, int, str], None]] = None) -> Tuple[bool, ProcessingStats]:
         """
         Build embedding cache for faster searches.
         
@@ -493,7 +509,7 @@ class SearchEngine:
             progress_callback: Optional progress callback
             
         Returns:
-            True if cache was built successfully
+            Tuple of (success: bool, stats: ProcessingStats)
         """
         return self.cache_manager.build_cache(discord_messages, progress_callback)
     

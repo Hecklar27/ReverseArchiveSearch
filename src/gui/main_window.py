@@ -87,7 +87,7 @@ class MainWindow:
         self.search_button.pack(side=tk.LEFT, padx=(0, 10))
         
         # Cache controls (Phase 2)
-        cache_frame = ttk.LabelFrame(search_frame, text="Phase 2: Cache Mode", padding="5")
+        cache_frame = ttk.LabelFrame(search_frame, text="Cache Mode", padding="5")
         cache_frame.pack(side=tk.LEFT, padx=(0, 10))
         
         # Cache status
@@ -389,8 +389,40 @@ class MainWindow:
         # Update results display
         self._display_results(results, stats)
         
+        # Check for expired links and show warning
+        self._check_expired_links_warning(stats)
+        
         # Update progress text
         self._update_progress(f"Search complete - found {len(results)} results in {stats.processing_time_seconds:.1f}s")
+    
+    def _check_expired_links_warning(self, stats: ProcessingStats):
+        """Check if there are significant expired links and show warning to user"""
+        if stats.expired_links > 0:
+            expired_percentage = (stats.expired_links / stats.total_images) * 100 if stats.total_images > 0 else 100
+            
+            # Log the statistics for debugging
+            logger.info(f"Expired links check: {stats.expired_links} expired out of {stats.total_images} total ({expired_percentage:.1f}%)")
+            
+            # Show warning if more than 10% of links are expired, or if more than 50 links are expired
+            # Special case: if total_images is 0 but we have expired_links, show warning anyway
+            if expired_percentage > 10 or stats.expired_links > 50 or (stats.total_images == 0 and stats.expired_links > 0):
+                warning_message = (
+                    f"⚠️ HTML Archive Contains Expired Links!\n\n"
+                    f"Found {stats.expired_links} expired links out of {stats.total_images} total images "
+                    f"({expired_percentage:.1f}%).\n\n"
+                    f"This means your HTML export file is old and Discord links have expired.\n\n"
+                    f"To get the latest results:\n"
+                    f"1. Re-export the mapart-archive channel using DiscordChatExporter\n"
+                    f"2. Load the new HTML file\n"
+                    f"3. Clear and rebuild the cache if using cached search\n\n"
+                    f"Note: Discord attachment links expire after 24 hours."
+                )
+                
+                messagebox.showwarning("Expired Links Detected", warning_message)
+                logger.warning(f"Expired links warning shown to user: {stats.expired_links}/{stats.total_images} links expired")
+            elif stats.expired_links > 0:
+                # Minor warning in progress text only
+                logger.info(f"Minor expired links detected: {stats.expired_links} expired links")
     
     def _on_search_error(self, error_message: str):
         """Handle search error"""
@@ -433,15 +465,23 @@ class MainWindow:
                 timestamp
             ))
         
-        # Update results count
-        self.results_count_label.config(text=f"{len(results)} results")
+        # Update results count with expired links info if any
+        results_text = f"{len(results)} results"
+        if stats.expired_links > 0:
+            results_text += f" ({stats.expired_links} expired links)"
+        self.results_count_label.config(text=results_text)
         
-        # Update statistics in progress
+        # Update statistics in progress with expired links info
         success_rate = stats.get_success_rate()
-        self._update_progress(
+        progress_text = (
             f"Processed {stats.processed_images}/{stats.total_images} images "
             f"({success_rate:.1f}% success) in {stats.processing_time_seconds:.1f}s"
         )
+        
+        if stats.expired_links > 0:
+            progress_text += f" - {stats.expired_links} expired links detected"
+        
+        self._update_progress(progress_text)
     
     def _on_result_select(self, event):
         """Handle result selection"""
@@ -530,6 +570,10 @@ class MainWindow:
             self._show_error("Please load HTML archive file first")
             return
         
+        # Reset expired link warning flag for this cache build
+        if hasattr(self, '_cache_expired_warning_shown'):
+            delattr(self, '_cache_expired_warning_shown')
+        
         # Disable buttons during cache build
         self.preprocess_button.config(state='disabled')
         self.search_button.config(state='disabled')
@@ -549,8 +593,8 @@ class MainWindow:
         def cache_build_worker():
             """Worker thread for cache building"""
             try:
-                success = self.search_engine.build_cache(self.discord_messages, progress_callback)
-                self.root.after(0, lambda: self._on_cache_build_complete(success))
+                success, stats = self.search_engine.build_cache(self.discord_messages, progress_callback)
+                self.root.after(0, lambda: self._on_cache_build_complete(success, stats))
             except Exception as e:
                 error_msg = str(e)
                 self.root.after(0, lambda: self._on_cache_build_error(error_msg))
@@ -558,17 +602,26 @@ class MainWindow:
         # Start cache building in background thread
         threading.Thread(target=cache_build_worker, daemon=True).start()
     
-    def _on_cache_build_complete(self, success: bool):
+    def _on_cache_build_complete(self, success: bool, stats: ProcessingStats):
         """Handle cache build completion"""
         self.progress_bar.grid_remove()
         
         if success:
             self.progress_var.set("Cache built successfully")
             self._update_cache_status()
+            
+            # Check for expired links and show warning
+            self._check_expired_links_warning(stats)
+            
             messagebox.showinfo("Cache Built", 
                               "Embedding cache built successfully!\nCached searches will now be much faster.")
         else:
             self.progress_var.set("Cache build failed")
+            
+            # Always check for expired links on failure - they might explain why it failed
+            self._check_expired_links_warning(stats)
+            
+            # Show the error message after the expired links warning (if any)
             self._show_error("Failed to build cache. Check logs for details.")
         
         # Re-enable buttons
@@ -589,6 +642,60 @@ class MainWindow:
         self.progress_bar.config(value=progress_percent)
         self.progress_var.set(f"Building cache: {progress_text}")
         self.root.update_idletasks()
+        
+        # Early expired link detection during cache building
+        if hasattr(self, '_cache_expired_warning_shown'):
+            return  # Already shown warning, don't spam
+            
+        # Check if progress indicates high expired link rate
+        # Look for pattern indicating many failed downloads
+        if "batch" in progress_text.lower() and self.search_engine.cache_manager.image_downloader:
+            try:
+                # Get current download statistics
+                download_stats = self.search_engine.cache_manager.image_downloader.get_stats()
+                total_attempted = download_stats.get('total_downloads', 0)
+                expired_links = download_stats.get('expired_links', 0)
+                
+                # Only check after we've attempted at least 64 downloads (2 batches) to avoid false positives
+                if total_attempted >= 64:
+                    expired_percentage = (expired_links / total_attempted) * 100 if total_attempted > 0 else 0
+                    
+                    # Show early warning if >75% of links are expired
+                    if expired_percentage > 75:
+                        self._cache_expired_warning_shown = True
+                        self._show_early_expired_warning(expired_links, total_attempted, expired_percentage)
+                        
+            except Exception as e:
+                logger.debug(f"Error checking early expired links: {e}")
+    
+    def _show_early_expired_warning(self, expired_links: int, total_attempted: int, expired_percentage: float):
+        """Show early warning when majority of links are expired during cache building"""
+        warning_message = (
+            f"⚠️ High Rate of Expired Links Detected!\n\n"
+            f"During cache building, {expired_links} out of {total_attempted} links have expired "
+            f"({expired_percentage:.1f}%).\n\n"
+            f"This suggests your HTML export file is old and most Discord links have expired.\n\n"
+            f"Consider stopping the cache build and:\n"
+            f"1. Re-export the mapart-archive channel using DiscordChatExporter\n"
+            f"2. Load the new HTML file\n"
+            f"3. Restart the cache building process\n\n"
+            f"Note: Discord attachment links expire after 24 hours.\n\n"
+            f"Continue building cache with expired links?"
+        )
+        
+        # Use askquestion instead of showwarning so user can choose to continue or stop
+        result = messagebox.askyesno("Expired Links Detected", warning_message)
+        
+        if not result:
+            # User chose to stop cache building
+            logger.info("User chose to stop cache building due to expired links")
+            # Note: We can't easily stop the background thread from here, 
+            # but the user can manually stop by closing the app or using clear cache
+            messagebox.showinfo("Cache Build Continuing", 
+                              "Cache build is continuing in background. "
+                              "You can stop it by closing the application or using 'Clear Cache' when complete.")
+        else:
+            logger.info("User chose to continue cache building despite expired links")
     
     def _start_cached_search(self):
         """Start cached search"""

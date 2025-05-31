@@ -29,6 +29,11 @@ class ImageDownloader:
         
         # Thread-local storage for per-thread sessions
         self._local = threading.local()
+        
+        # Track statistics with thread safety
+        self.expired_links_count = 0
+        self.failed_downloads_count = 0
+        self._stats_lock = threading.Lock()  # Thread lock for statistics
     
     def _get_session(self) -> requests.Session:
         """Get or create a session for the current thread"""
@@ -38,6 +43,16 @@ class ImageDownloader:
                 'User-Agent': 'ReverseArchiveSearch/1.0 (Educational/Research)'
             })
         return self._local.session
+    
+    def _increment_expired_links(self):
+        """Thread-safe increment of expired links counter"""
+        with self._stats_lock:
+            self.expired_links_count += 1
+    
+    def _increment_failed_downloads(self):
+        """Thread-safe increment of failed downloads counter"""
+        with self._stats_lock:
+            self.failed_downloads_count += 1
     
     def download_image(self, url: str) -> Optional[Image.Image]:
         """
@@ -92,24 +107,31 @@ class ImageDownloader:
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 404:
                     logger.info(f"Image not found (404) - likely expired: {url}")
+                    self._increment_expired_links()
                     return None
                 elif e.response.status_code == 403:
                     logger.warning(f"Access forbidden (403): {url}")
+                    self._increment_failed_downloads()
                     return None
                 else:
                     logger.warning(f"HTTP error {e.response.status_code} for {url}: {e}")
+                    self._increment_failed_downloads()
                     
             except requests.exceptions.Timeout:
                 logger.warning(f"Timeout downloading image: {url}")
+                self._increment_failed_downloads()
                 
             except requests.exceptions.ConnectionError:
                 logger.warning(f"Connection error downloading image: {url}")
+                self._increment_failed_downloads()
                 
             except requests.exceptions.RequestException as e:
                 logger.warning(f"Request error downloading image {url}: {e}")
+                self._increment_failed_downloads()
                 
             except Exception as e:
                 logger.warning(f"Unexpected error downloading image {url}: {e}")
+                self._increment_failed_downloads()
             
             # Wait before retry (exponential backoff)
             if attempt < self.max_retries - 1:
@@ -118,6 +140,7 @@ class ImageDownloader:
                 time.sleep(wait_time)
         
         logger.error(f"Failed to download image after {self.max_retries} attempts: {url}")
+        self._increment_failed_downloads()
         return None
     
     def download_images_batch(self, urls: List[str]) -> List[Tuple[str, Optional[Image.Image]]]:
@@ -149,6 +172,21 @@ class ImageDownloader:
         
         return results
 
+    def reset_stats(self):
+        """Reset download statistics"""
+        with self._stats_lock:
+            self.expired_links_count = 0
+            self.failed_downloads_count = 0
+
+    def get_stats(self) -> dict:
+        """Get download statistics"""
+        with self._stats_lock:
+            return {
+                'expired_links': self.expired_links_count,
+                'failed_downloads': self.failed_downloads_count,
+                'total_downloads': self.expired_links_count + self.failed_downloads_count
+            }
+
     def is_valid_image_url(self, url: str) -> bool:
         """
         Check if URL appears to be a valid image URL without downloading.
@@ -170,14 +208,4 @@ class ImageDownloader:
         if '?' in url_lower:
             url_lower = url_lower.split('?')[0]
         
-        return any(url_lower.endswith(ext) for ext in image_extensions)
-    
-    def get_stats(self) -> dict:
-        """Get download statistics (placeholder for future implementation)"""
-        return {
-            'total_downloads': 0,
-            'successful_downloads': 0,
-            'failed_downloads': 0,
-            'timeout_errors': 0,
-            'http_errors': 0
-        } 
+        return any(url_lower.endswith(ext) for ext in image_extensions) 

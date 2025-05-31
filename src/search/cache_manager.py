@@ -12,7 +12,7 @@ from typing import List, Dict, Optional, Tuple, Any
 from pathlib import Path
 from datetime import datetime, timedelta
 
-from data.models import DiscordMessage, DiscordAttachment
+from data.models import DiscordMessage, DiscordAttachment, ProcessingStats
 from core.config import Config
 from .clip_engine import CLIPEngine
 from .image_downloader import ImageDownloader
@@ -175,7 +175,7 @@ class EmbeddingCacheManager:
             raise
     
     def build_cache(self, discord_messages: List[DiscordMessage], 
-                   progress_callback: Optional[callable] = None) -> bool:
+                   progress_callback: Optional[callable] = None) -> Tuple[bool, ProcessingStats]:
         """
         Build embedding cache from Discord messages.
         
@@ -184,35 +184,43 @@ class EmbeddingCacheManager:
             progress_callback: Optional progress callback (current, total, status)
             
         Returns:
-            True if cache was built successfully
+            Tuple of (success: bool, stats: ProcessingStats)
         """
         logger.info(f"Building embedding cache for {len(discord_messages)} messages")
         start_time = time.time()
+        
+        # Reset image downloader stats before starting
+        self.image_downloader.reset_stats()
+        
+        # Initialize statistics
+        stats = ProcessingStats()
+        stats.total_messages = len(discord_messages)
         
         # Collect all image attachments
         image_info = []  # (message, attachment) pairs
         for message in discord_messages:
             if message.has_images():
+                stats.messages_with_images += 1
                 for attachment in message.get_image_attachments():
                     image_info.append((message, attachment))
         
         total_images = len(image_info)
+        stats.total_images = total_images
+        
         if total_images == 0:
             logger.warning("No images found in Discord messages")
-            return False
+            stats.processing_time_seconds = time.time() - start_time
+            return False, stats
         
         logger.info(f"Found {total_images} images to process")
         
-        # Initialize metadata
-        metadata = CacheMetadata()
-        metadata.total_images = total_images
-        metadata.clip_model = self.clip_engine.model_name
-        
-        # Process images in batches
-        batch_size = self.config.cache.batch_size
+        # Initialize storage
         all_embeddings = []
+        metadata = CacheMetadata()
         processed_count = 0
         
+        # Process in batches
+        batch_size = 32
         for batch_start in range(0, total_images, batch_size):
             batch_end = min(batch_start + batch_size, total_images)
             batch_info = image_info[batch_start:batch_end]
@@ -221,46 +229,45 @@ class EmbeddingCacheManager:
                 progress_callback(processed_count, total_images, 
                                 f"Processing batch {batch_start//batch_size + 1}...")
             
-            # Download images for this batch
+            # Extract URLs for this batch
             batch_urls = [attachment.url for _, attachment in batch_info]
+            
+            # Download images for this batch
+            logger.info(f"Downloading batch {batch_start//batch_size + 1}: {len(batch_urls)} images")
             download_results = self.image_downloader.download_images_batch(batch_urls)
             
-            # Process successful downloads
-            batch_images = []
+            # Separate successful and failed downloads
+            downloaded_images = []
             valid_batch_info = []
             
             for i, (url, image) in enumerate(download_results):
                 if image is not None:
-                    batch_images.append(image)
+                    downloaded_images.append(image)
                     valid_batch_info.append(batch_info[i])
+                else:
+                    stats.failed_downloads += 1
             
-            if batch_images:
+            if downloaded_images:
+                if progress_callback:
+                    progress_callback(processed_count, total_images, 
+                                    f"Encoding batch {batch_start//batch_size + 1} with CLIP...")
+                
                 # Encode images with CLIP
                 try:
-                    batch_embeddings = self.clip_engine.encode_images_batch(batch_images)
+                    logger.info(f"Encoding {len(downloaded_images)} images with CLIP")
+                    batch_embeddings = self.clip_engine.encode_images_batch(downloaded_images)
                     
                     # Store embeddings and metadata
-                    for i, ((message, attachment), embedding) in enumerate(zip(valid_batch_info, batch_embeddings)):
-                        # Generate Discord URL
-                        discord_url = self.config.discord.get_message_url(message.id)
-                        
-                        # Store in metadata
-                        index = len(all_embeddings)
-                        metadata.index_to_metadata[index] = {
-                            'message_id': message.id,
-                            'message_type': message.type,
-                            'filename': attachment.filename,
-                            'url': attachment.url,
-                            'discord_url': discord_url,
-                            'message_content': message.content,
-                            'author': message.author,
-                            'timestamp': message.timestamp,
-                            'attachment_id': attachment.id,
-                            'file_size_bytes': attachment.file_size_bytes
-                        }
-                        
+                    for j, ((message, attachment), embedding) in enumerate(zip(valid_batch_info, batch_embeddings)):
                         all_embeddings.append(embedding)
+                        
+                        # Add to metadata with Discord URL
+                        discord_url = self.config.discord.get_message_url(message.id)
+                        metadata.add_image_metadata(len(all_embeddings) - 1, message, attachment)
+                        metadata.index_to_metadata[len(all_embeddings) - 1]['discord_url'] = discord_url
+                        
                         processed_count += 1
+                        stats.processed_images += 1
                         
                         if progress_callback:
                             progress_callback(processed_count, total_images, 
@@ -272,13 +279,32 @@ class EmbeddingCacheManager:
         
         if not all_embeddings:
             logger.error("No embeddings were generated")
-            return False
+            stats.processing_time_seconds = time.time() - start_time
+            
+            # Get download statistics and update ProcessingStats
+            download_stats = self.image_downloader.get_stats()
+            stats.expired_links = download_stats['expired_links']
+            
+            return False, stats
+        
+        # Get download statistics and update ProcessingStats
+        download_stats = self.image_downloader.get_stats()
+        stats.expired_links = download_stats['expired_links']
+        
+        # Log expired link information
+        if stats.expired_links > 0:
+            logger.warning(f"Found {stats.expired_links} expired links out of {stats.total_images} total images during cache building")
+            expired_percentage = (stats.expired_links / stats.total_images) * 100
+            logger.warning(f"Expired link percentage: {expired_percentage:.1f}%")
         
         # Convert to numpy array
         embeddings_array = np.array(all_embeddings)
         
         if progress_callback:
-            progress_callback(total_images, total_images, "Saving cache...")
+            cache_status = "Saving cache..."
+            if stats.expired_links > 0:
+                cache_status += f" ({stats.expired_links} expired links detected)"
+            progress_callback(stats.total_images, stats.total_images, cache_status)
         
         # Save to cache
         try:
@@ -290,14 +316,20 @@ class EmbeddingCacheManager:
             self._metadata = metadata
             
             build_time = time.time() - start_time
-            logger.info(f"Cache built successfully in {build_time:.2f}s")
-            logger.info(f"Cached {len(all_embeddings)} embeddings from {total_images} images")
+            stats.processing_time_seconds = build_time
             
-            return True
+            logger.info(f"Cache built successfully in {build_time:.2f}s")
+            logger.info(f"Cached {len(all_embeddings)} embeddings from {stats.total_images} images")
+            
+            if stats.expired_links > 0:
+                logger.info(f"Cache build completed with {stats.expired_links} expired links - consider re-exporting HTML")
+            
+            return True, stats
             
         except Exception as e:
             logger.error(f"Failed to save cache: {e}")
-            return False
+            stats.processing_time_seconds = time.time() - start_time
+            return False, stats
     
     def load_cache(self) -> bool:
         """Load cache into memory"""
