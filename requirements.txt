@@ -50,5 +50,5 @@ wcwidth==0.2.13
 #   pip install git+https://github.com/openai/CLIP.git
 
 # Computer Vision dependencies for map art detection
-opencv-python>=4.8.0  # For map art detection and cropping
-ultralytics>=8.0.0    # For YOLO object detection (optional) 
+opencv-python==4.11.0.86  # Required for map art detection and cropping (exact version tested)
+ultralytics>=8.0.0    # For YOLO object detection (optional, requires additional setup) 

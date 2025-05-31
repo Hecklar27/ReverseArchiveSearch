@@ -34,6 +34,12 @@ typing_extensions==4.13.2
 urllib3==2.4.0
 wcwidth==0.2.13
 
+# === Computer Vision Dependencies ===
+opencv-python==4.11.0.86  # Required for map art detection and cropping (exact version tested)
+ultralytics>=8.0.0    # For YOLO object detection (optional, requires additional setup)
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
 # === Installation Instructions ===
 # Install with CUDA index:
 #   pip install -r requirements_cuda.txt --index-url https://download.pytorch.org/whl/cu118

@@ -83,7 +83,9 @@ torchaudio==2.6.0"""
 Pillow
 requests
 colorlog
-beautifulsoup4==4.12.3"""
+beautifulsoup4==4.12.3
+opencv-python==4.11.0.86
+lxml>=4.9.0"""
         
         with open("requirements_other_temp.txt", "w") as f:
             f.write(other_requirements)
@@ -111,7 +113,9 @@ numpy
 Pillow
 requests
 colorlog
-beautifulsoup4==4.12.3"""
+beautifulsoup4==4.12.3
+opencv-python==4.11.0.86
+lxml>=4.9.0"""
         
         with open("requirements_cpu_temp.txt", "w") as f:
             f.write(cpu_requirements)
@@ -308,7 +312,7 @@ def main():
     
     packages_to_check = [
         "torch", "torchvision", "numpy", "clip", 
-        "PIL", "requests", "colorlog", "bs4"
+        "PIL", "requests", "colorlog", "bs4", "cv2"
     ]
     
     failed_imports = []
@@ -318,6 +322,10 @@ def main():
                 import PIL
             elif package == "bs4":
                 import bs4
+            elif package == "cv2":
+                import cv2
+                print(f"✓ {package} (OpenCV version: {cv2.__version__})")
+                continue
             else:
                 __import__(package)
             print(f"✓ {package}")

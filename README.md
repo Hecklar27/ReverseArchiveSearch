@@ -53,6 +53,7 @@ python cleanup.py --force
 python cleanup.py --keep-venv     # Keep virtual environment
 python cleanup.py --keep-logs     # Keep log files  
 python cleanup.py --keep-cache    # Keep application cache
+python setup.py cleanup    # Remove core dependencies only
 ```
 
 **What the cleanup script removes:**
@@ -73,10 +74,4 @@ source .venv/bin/activate  # Linux/Mac
 
 # 2. Run setup script
 python setup.py
-```
-
-### Built-in Setup Cleanup
-The setup script also includes basic cleanup functionality:
-```bash
-python setup.py cleanup    # Remove core dependencies only
 ```

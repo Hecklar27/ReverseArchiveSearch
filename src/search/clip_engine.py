@@ -11,6 +11,16 @@ from typing import Optional, List, Union, Tuple
 from pathlib import Path
 import time
 
+# Try to import version-compatible autocast
+try:
+    # New API (PyTorch 1.10+)
+    from torch.amp import autocast
+    USE_NEW_AUTOCAST = True
+except ImportError:
+    # Fallback to old API
+    from torch.cuda.amp import autocast as cuda_autocast
+    USE_NEW_AUTOCAST = False
+
 from core.config import Config
 
 logger = logging.getLogger(__name__)
@@ -19,47 +29,66 @@ class CLIPEngine:
     """CLIP-based image encoding and similarity search with map art detection"""
     
     def __init__(self, config: Config = None):
-        self.config = config or Config()
-        self.clip_config = config.clip if config else Config().clip
-        self.vision_config = config.vision if config else Config().vision
+        """Initialize CLIP engine with given configuration"""
+        if config is None:
+            config = Config()
         
-        # Device selection
+        self.clip_config = config.clip
+        self.vision_config = config.vision
+        
+        # Set model name from config
+        self.model_name = self.clip_config.model_name
+        
+        # Device detection based on config
         if self.clip_config.device == "auto":
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = self.clip_config.device
-        
-        logger.info(f"Initializing CLIP on device: {self.device}")
+            
+        # Ensure device is valid
+        if self.device == "cuda" and not torch.cuda.is_available():
+            logger.warning("CUDA requested but not available, falling back to CPU")
+            self.device = "cpu"
         
         # Load CLIP model
+        logger.info(f"Loading CLIP model {self.model_name} on device {self.device}")
         try:
-            self.model, self.preprocess = clip.load(self.clip_config.model_name, device=self.device)
-            self.model_name = self.clip_config.model_name
-            
-            # Enable model optimizations
-            self.model.eval()  # Set to evaluation mode
-            
-            # Enable mixed precision if using CUDA (but be more conservative)
-            self.use_mixed_precision = False  # Temporarily disable until we can fix type issues
-            if self.device == "cuda" and torch.cuda.is_available():
-                try:
-                    # Test if mixed precision works with this setup
-                    test_tensor = torch.randn(1, 3, 224, 224).cuda()
-                    with torch.cuda.amp.autocast():
-                        _ = self.model.encode_image(test_tensor)
-                    
-                    # If test passed, enable mixed precision
-                    self.use_mixed_precision = True
-                    logger.info("Mixed precision (FP16) tested and enabled for better performance")
-                except Exception as e:
-                    logger.warning(f"Mixed precision test failed, using FP32: {e}")
-                    self.use_mixed_precision = False
-            
-            logger.info(f"CLIP model {self.model_name} loaded successfully")
-            
+            self.model, self.preprocess = clip.load(self.model_name, device=self.device)
+            logger.info(f"Successfully loaded CLIP model {self.model_name}")
         except Exception as e:
-            logger.error(f"Failed to load CLIP model: {e}")
+            logger.error(f"Failed to load CLIP model {self.model_name}: {e}")
             raise
+        
+        # Get embedding dimension based on model
+        model_info = config.clip.get_model_info(self.model_name)
+        self.embedding_dim = model_info['embedding_dim'] if model_info else 512
+        
+        # Mixed precision support
+        self.use_mixed_precision = False
+        if self.device == "cuda" and self.clip_config.use_mixed_precision:
+            try:
+                # Test if mixed precision works with this setup
+                logger.debug("Testing mixed precision compatibility...")
+                test_tensor = torch.randn(1, 3, 224, 224, device=self.device)
+                
+                with torch.no_grad():
+                    with self._get_autocast_context():
+                        _ = self.model.encode_image(test_tensor)
+                
+                self.use_mixed_precision = True
+                logger.info("Mixed precision enabled for CLIP model")
+                
+            except Exception as e:
+                logger.warning(f"Mixed precision not available: {e}")
+                self.use_mixed_precision = False
+            finally:
+                # Always clean up test tensor
+                try:
+                    del test_tensor
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                except:
+                    pass
         
         # Initialize map art detector if enabled
         self.map_art_detector = None
@@ -73,19 +102,26 @@ class CLIPEngine:
                 logger.info(f"Map art detector initialized with method: {self.vision_config.detection_method}, "
                            f"fast mode: {self.vision_config.use_fast_detection}")
             except ImportError:
-                logger.warning("Map art detection module not available, falling back to full image processing")
+                logger.warning("Map art detection module not available, disabling map art detection")
+                self.vision_config.enable_map_art_detection = False
             except Exception as e:
-                logger.error(f"Failed to initialize map art detector: {e}")
+                logger.warning(f"Failed to initialize map art detector: {e}")
+                logger.warning("Disabling map art detection")
+                self.vision_config.enable_map_art_detection = False
         
-        # Model dimensions (needed for validation)
-        if self.model_name in ["ViT-L/14", "ViT-L/14@336px"]:
-            self.embedding_dim = 768
-        elif self.model_name in ["ViT-B/32", "ViT-B/16"]:
-            self.embedding_dim = 512
-        elif "RN" in self.model_name:  # ResNet variants
-            self.embedding_dim = 1024 if "x64" in self.model_name else 2048
+        logger.info(f"CLIP engine initialized successfully on {self.device}")
+    
+    def _get_autocast_context(self):
+        """Get the appropriate autocast context for the current PyTorch version"""
+        if self.device == "cuda" and self.use_mixed_precision:
+            if USE_NEW_AUTOCAST:
+                return autocast('cuda')
+            else:
+                return cuda_autocast()
         else:
-            self.embedding_dim = 512  # Default
+            # Return a dummy context manager that does nothing
+            from contextlib import nullcontext
+            return nullcontext()
     
     def _crop_map_art(self, image: Image.Image) -> List[Image.Image]:
         """
@@ -209,7 +245,7 @@ class CLIPEngine:
             
             with torch.no_grad():
                 if self.use_mixed_precision:
-                    with torch.cuda.amp.autocast():
+                    with self._get_autocast_context():
                         # Get image features
                         image_features = self.model.encode_image(image_tensor)
                         
@@ -253,7 +289,7 @@ class CLIPEngine:
                 with torch.no_grad():
                     # Skip mixed precision for smaller models (ViT-B/32) as it adds overhead
                     if self.use_mixed_precision and self.model_name in ["ViT-L/14", "ViT-L/14@336px"]:
-                        with torch.cuda.amp.autocast():
+                        with self._get_autocast_context():
                             image_features = self.model.encode_image(image_tensors)
                             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
                     else:
@@ -300,7 +336,7 @@ class CLIPEngine:
             with torch.no_grad():
                 # Use mixed precision only for large models
                 if self.use_mixed_precision and self.model_name in ["ViT-L/14", "ViT-L/14@336px"]:
-                    with torch.cuda.amp.autocast():
+                    with self._get_autocast_context():
                         image_features = self.model.encode_image(image_tensors)
                         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
                 else:

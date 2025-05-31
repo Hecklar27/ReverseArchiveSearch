@@ -27,6 +27,7 @@ class ClipConfig:
     model_name: str = "ViT-L/14"  # Default to accurate but slow model
     device: str = "auto"  # auto, cuda, cpu
     batch_size: int = 16  # Will be adjusted based on model
+    use_mixed_precision: bool = True  # Enable mixed precision for faster processing
     
     # Model performance metadata
     MODEL_OPTIONS = {
