@@ -66,8 +66,12 @@ class CLIPEngine:
         if self.vision_config.enable_map_art_detection:
             try:
                 from vision.map_art_detector import create_map_art_detector
-                self.map_art_detector = create_map_art_detector(method=self.vision_config.detection_method)
-                logger.info(f"Map art detector initialized with method: {self.vision_config.detection_method}")
+                self.map_art_detector = create_map_art_detector(
+                    method=self.vision_config.detection_method,
+                    use_fast_detection=self.vision_config.use_fast_detection
+                )
+                logger.info(f"Map art detector initialized with method: {self.vision_config.detection_method}, "
+                           f"fast mode: {self.vision_config.use_fast_detection}")
             except ImportError:
                 logger.warning("Map art detection module not available, falling back to full image processing")
             except Exception as e:
@@ -115,6 +119,58 @@ class CLIPEngine:
         except Exception as e:
             logger.warning(f"Map art detection failed: {e}, using full image")
             return [image]
+    
+    def _crop_map_art_batch(self, images: List[Image.Image]) -> List[Image.Image]:
+        """
+        Detect and crop map art from multiple images in batch (optimized for cache building).
+        
+        Args:
+            images: List of input PIL Images
+            
+        Returns:
+            List of processed images (cropped map art or original if no detection/fallback)
+        """
+        if self.map_art_detector is None:
+            return images
+        
+        if not images:
+            return []
+        
+        try:
+            # Use batch processing for significant speedup
+            logger.debug(f"Processing {len(images)} images with batch map art detection")
+            start_time = time.time()
+            
+            # Process all images in a single batch call
+            batch_results = self.map_art_detector.process_images_batch(images)
+            
+            detection_time = time.time() - start_time
+            logger.debug(f"Batch map art detection completed in {detection_time:.2f}s for {len(images)} images")
+            
+            processed_images = []
+            
+            for i, (original_image, cropped_images) in enumerate(zip(images, batch_results)):
+                if cropped_images:
+                    # Use the first (largest) detected region
+                    processed_images.append(cropped_images[0])
+                    logger.debug(f"Image {i}: detected {len(cropped_images)} map art regions, using largest")
+                else:
+                    # No map art detected
+                    if self.vision_config.fallback_to_full_image:
+                        processed_images.append(original_image)
+                        logger.debug(f"Image {i}: no map art detected, using full image")
+                    else:
+                        logger.debug(f"Image {i}: no map art detected, skipping image")
+                        # Skip this image by not adding to processed_images
+                        continue
+            
+            logger.debug(f"Batch map art processing: {len(processed_images)}/{len(images)} images processed")
+            return processed_images
+                    
+        except Exception as e:
+            logger.warning(f"Batch map art detection failed: {e}, falling back to individual processing")
+            # Fallback to individual processing
+            return [self._crop_map_art(image)[0] if self._crop_map_art(image) else image for image in images]
     
     def encode_image(self, image: Union[str, Path, Image.Image]) -> np.ndarray:
         """
@@ -219,38 +275,26 @@ class CLIPEngine:
                     
                     return embeddings
             
-            # Slower path: map art detection enabled (original complex logic)
-            processed_images = []
+            # OPTIMIZED PATH: Map art detection enabled - use batch processing
+            logger.debug(f"Starting batch map art detection for {len(images)} images")
+            map_art_start_time = time.time()
             
-            # Apply map art detection to each image if enabled
-            for image in images:
-                if self.vision_config.enable_map_art_detection:
-                    cropped_images = self._crop_map_art(image)
-                    
-                    if cropped_images:
-                        # Use the first (largest) detected region
-                        processed_images.append(cropped_images[0])
-                    elif self.vision_config.fallback_to_full_image:
-                        # Fallback to full image if no map art detected
-                        processed_images.append(image)
-                    else:
-                        # Skip image if no map art and fallback disabled
-                        logger.warning("Skipping image: no map art detected and fallback disabled")
-                        processed_images.append(None)
-                else:
-                    # No map art detection, use original image
-                    processed_images.append(image)
+            # Process all images with batch map art detection (MAJOR OPTIMIZATION)
+            processed_images = self._crop_map_art_batch(images)
             
-            # Filter out None values (skipped images)
-            valid_images = [img for img in processed_images if img is not None]
+            map_art_time = time.time() - map_art_start_time
+            logger.debug(f"Batch map art detection completed in {map_art_time:.2f}s - processed {len(processed_images)}/{len(images)} images")
             
-            if not valid_images:
-                logger.warning("No valid images after map art processing")
+            if not processed_images:
+                logger.warning("No valid images after batch map art processing")
                 return []
             
-            # Use efficient tensor creation even with map art detection
+            # Now encode all processed images efficiently
+            logger.debug(f"Encoding {len(processed_images)} processed images with CLIP")
+            clip_start_time = time.time()
+            
             image_tensors = torch.stack([
-                self.preprocess(img.convert('RGB')) for img in valid_images
+                self.preprocess(img.convert('RGB')) for img in processed_images
             ]).to(self.device)
             
             with torch.no_grad():
@@ -274,6 +318,10 @@ class CLIPEngine:
                 del image_features
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
+                
+                clip_time = time.time() - clip_start_time
+                total_time = map_art_time + clip_time
+                logger.debug(f"CLIP encoding completed in {clip_time:.2f}s - Total batch time: {total_time:.2f}s (map art: {map_art_time:.2f}s, CLIP: {clip_time:.2f}s)")
                 
                 return embeddings
                 

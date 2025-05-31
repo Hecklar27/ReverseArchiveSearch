@@ -150,14 +150,23 @@ class MainWindow:
         map_art_controls = ttk.Frame(cache_frame)
         map_art_controls.pack(fill=tk.X, pady=(5, 0))
         
-        # Map art detection toggle
+        # Main map art detection toggle with info text next to it
+        main_detection_frame = ttk.Frame(map_art_controls)
+        main_detection_frame.pack(anchor=tk.W)
+        
         self.map_art_var = tk.BooleanVar(value=self.config.vision.enable_map_art_detection)
-        self.map_art_checkbox = ttk.Checkbutton(map_art_controls, text="Enable Map Art Detection",
+        self.map_art_checkbox = ttk.Checkbutton(main_detection_frame, text="Enable Map Art Detection",
                                                variable=self.map_art_var,
                                                command=self._on_map_art_toggle)
-        self.map_art_checkbox.pack(anchor=tk.W)
+        self.map_art_checkbox.pack(side=tk.LEFT)
         
-        # Map art status label
+        # Info text next to main checkbox
+        ttk.Label(main_detection_frame, text="💡", font=('TkDefaultFont', 8)).pack(side=tk.LEFT, padx=(5, 2))
+        self.map_art_info_label = ttk.Label(main_detection_frame, text="Auto-disabled during cache building, usually more accurate", 
+                 font=('TkDefaultFont', 8), foreground='gray')
+        self.map_art_info_label.pack(side=tk.LEFT)
+        
+        # Map art status label (below controls)
         self.map_art_status_var = tk.StringVar()
         self.map_art_status_label = ttk.Label(map_art_controls, textvariable=self.map_art_status_var,
                                              font=('TkDefaultFont', 8), wraplength=200)
@@ -238,28 +247,22 @@ class MainWindow:
         self.details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         details_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # Right side: Image preview (only show if map detection is enabled)
-        if self.config.vision.enable_map_art_detection:
-            image_preview_frame = ttk.LabelFrame(details_container, text="Map Art Preview", padding="5")
-            image_preview_frame.pack(side=tk.RIGHT, padx=(10, 0))
-            
-            # Image preview canvas
-            self.result_preview_canvas = tk.Canvas(image_preview_frame, width=200, height=150, bg='lightgray')
-            self.result_preview_canvas.pack()
-            
-            # Preview status
-            self.preview_status_var = tk.StringVar(value="Select a result to see cropped map")
-            self.preview_status_label = ttk.Label(image_preview_frame, textvariable=self.preview_status_var, 
-                                                 font=('TkDefaultFont', 8), wraplength=190)
-            self.preview_status_label.pack(pady=(5, 0))
-            
-            # Initialize with empty preview
-            self._clear_result_preview()
-        else:
-            # Initialize empty attributes when map detection is disabled
-            self.result_preview_canvas = None
-            self.preview_status_var = None
-            self.preview_status_label = None
+        # Right side: Image preview (always show, adjust behavior based on map detection setting)
+        image_preview_frame = ttk.LabelFrame(details_container, text="Image Preview", padding="5")
+        image_preview_frame.pack(side=tk.RIGHT, padx=(10, 0))
+        
+        # Image preview canvas
+        self.result_preview_canvas = tk.Canvas(image_preview_frame, width=200, height=150, bg='lightgray')
+        self.result_preview_canvas.pack()
+        
+        # Preview status
+        self.preview_status_var = tk.StringVar(value="Select a result to see image preview")
+        self.preview_status_label = ttk.Label(image_preview_frame, textvariable=self.preview_status_var, 
+                                             font=('TkDefaultFont', 8), wraplength=190)
+        self.preview_status_label.pack(pady=(5, 0))
+        
+        # Initialize with empty preview
+        self._clear_result_preview()
         
         # Discord link button (below both sections)
         button_frame = ttk.Frame(details_frame)
@@ -269,13 +272,10 @@ class MainWindow:
                                             command=self._open_discord_link, state='disabled')
         self.discord_link_button.pack(side=tk.LEFT)
         
-        # Show original button (if map detection is enabled)
-        if self.config.vision.enable_map_art_detection:
-            self.show_original_button = ttk.Button(button_frame, text="Show Original Image", 
-                                                 command=self._show_original_result_image, state='disabled')
-            self.show_original_button.pack(side=tk.LEFT, padx=(10, 0))
-        else:
-            self.show_original_button = None
+        # Show original button (always show if we have preview canvas)
+        self.show_original_button = ttk.Button(button_frame, text="Show Original Image", 
+                                             command=self._show_original_result_image, state='disabled')
+        self.show_original_button.pack(side=tk.LEFT, padx=(10, 0))
         
         # Bind result selection
         self.results_tree.bind('<<TreeviewSelect>>', self._on_result_select)
@@ -637,16 +637,15 @@ class MainWindow:
         # Enable Discord link button
         self.discord_link_button.config(state='normal')
         
-        # Enable show original button if map detection is enabled
-        if self.show_original_button:
-            self.show_original_button.config(state='normal')
+        # Enable show original button (always enable since we always have preview now)
+        self.show_original_button.config(state='normal')
         
         # Load and preview the result image
         self._load_result_image_preview(result)
     
     def _load_result_image_preview(self, result: SearchResult):
-        """Load and show the cropped version of a result image"""
-        if not self.config.vision.enable_map_art_detection or not hasattr(self, 'result_preview_canvas'):
+        """Load and show the image preview - cropped if map art detection enabled, original if disabled"""
+        if not hasattr(self, 'result_preview_canvas'):
             return
         
         def load_worker():
@@ -662,36 +661,47 @@ class MainWindow:
                 # Load image
                 original_image = Image.open(BytesIO(response.content)).convert('RGB')
                 
-                # Update status
-                self.root.after(0, lambda: self.preview_status_var.set("Processing map detection..."))
-                
-                # Apply map art detection using the same logic as the search engines
-                cropped_images = self._apply_map_art_detection(original_image)
-                
-                if cropped_images:
-                    # Use the first (largest) cropped image - same as search engines
-                    cropped_image = cropped_images[0]
+                if self.config.vision.enable_map_art_detection:
+                    # Map art detection enabled - show cropped version
+                    self.root.after(0, lambda: self.preview_status_var.set("Processing map detection..."))
                     
-                    # Store both images for toggling
-                    self.selected_result_image = cropped_image
-                    self.original_result_image = original_image
+                    # Apply map art detection using the current fast detection setting
+                    cropped_images = self._apply_map_art_detection(original_image)
                     
-                    # Display cropped version
-                    self.root.after(0, lambda: self._display_result_preview(cropped_image, True, len(cropped_images)))
-                    
-                else:
-                    # No map art detected
-                    if self.config.vision.fallback_to_full_image:
-                        # Store original image
-                        self.selected_result_image = original_image
+                    if cropped_images:
+                        # Use the first (largest) cropped image - same as search engines
+                        cropped_image = cropped_images[0]
+                        
+                        # Store both images for toggling
+                        self.selected_result_image = cropped_image
                         self.original_result_image = original_image
                         
-                        # Display original
-                        self.root.after(0, lambda: self._display_result_preview(original_image, False, 0))
+                        # Display cropped version
+                        self.root.after(0, lambda: self._display_result_preview(cropped_image, True, len(cropped_images)))
+                        
                     else:
-                        # Clear preview
-                        self.root.after(0, lambda: self._clear_result_preview())
-                        self.root.after(0, lambda: self.preview_status_var.set("No map art detected, image skipped"))
+                        # No map art detected
+                        if self.config.vision.fallback_to_full_image:
+                            # Store original image
+                            self.selected_result_image = original_image
+                            self.original_result_image = original_image
+                            
+                            # Display original
+                            self.root.after(0, lambda: self._display_result_preview(original_image, False, 0))
+                        else:
+                            # Clear preview
+                            self.root.after(0, lambda: self._clear_result_preview())
+                            self.root.after(0, lambda: self.preview_status_var.set("No map art detected, image skipped"))
+                else:
+                    # Map art detection disabled - show original image
+                    self.root.after(0, lambda: self.preview_status_var.set("Showing original image..."))
+                    
+                    # Store original image
+                    self.selected_result_image = original_image
+                    self.original_result_image = original_image
+                    
+                    # Display original image with different status
+                    self.root.after(0, lambda: self._display_result_preview(original_image, False, 0, is_detection_disabled=True))
                 
             except requests.exceptions.RequestException as e:
                 logger.error(f"Failed to download result image: {e}")
@@ -713,7 +723,10 @@ class MainWindow:
             from vision.map_art_detector import create_map_art_detector
             
             # Create detector with current settings
-            detector = create_map_art_detector(method=self.config.vision.detection_method)
+            detector = create_map_art_detector(
+                method=self.config.vision.detection_method,
+                use_fast_detection=self.config.vision.use_fast_detection
+            )
             
             # Process image
             cropped_images = detector.process_image(image)
@@ -726,7 +739,7 @@ class MainWindow:
             logger.error(f"Map art detection failed: {e}")
             return []
     
-    def _display_result_preview(self, image: Image.Image, is_cropped: bool, num_regions: int):
+    def _display_result_preview(self, image: Image.Image, is_cropped: bool, num_regions: int, is_detection_disabled: bool = False):
         """Display a result image in the preview canvas"""
         try:
             # Calculate display size while maintaining aspect ratio
@@ -763,15 +776,21 @@ class MainWindow:
             # Keep a reference to prevent garbage collection
             self.result_preview_canvas.image = photo
             
-            # Add border indicator
-            if is_cropped and num_regions > 0:
+            # Add border indicator and status based on mode
+            if is_detection_disabled:
+                # Blue border for when detection is disabled - showing original
+                self.result_preview_canvas.create_rectangle(x_offset-2, y_offset-2, 
+                                                          x_offset+display_width+2, y_offset+display_height+2,
+                                                          outline='blue', width=2)
+                status_text = "🖼️ Original image (detection disabled)"
+            elif is_cropped and num_regions > 0:
                 # Green border for cropped map art
                 self.result_preview_canvas.create_rectangle(x_offset-2, y_offset-2, 
                                                           x_offset+display_width+2, y_offset+display_height+2,
                                                           outline='green', width=2)
                 status_text = f"✅ Cropped map art ({num_regions} region{'s' if num_regions > 1 else ''} detected)"
             else:
-                # Orange border for full image
+                # Orange border for full image (detection enabled but no map found)
                 self.result_preview_canvas.create_rectangle(x_offset-2, y_offset-2, 
                                                           x_offset+display_width+2, y_offset+display_height+2,
                                                           outline='orange', width=2)
@@ -802,6 +821,14 @@ class MainWindow:
         try:
             # Check current button text to determine what to show
             current_text = self.show_original_button.cget('text')
+            
+            if not self.config.vision.enable_map_art_detection:
+                # When map art detection is disabled, we're always showing the original
+                # The button doesn't need to toggle anything, just inform the user
+                messagebox.showinfo("Image Preview", 
+                                  "Map art detection is disabled. The preview always shows the original image.\n\n"
+                                  "To see cropped map art, enable map art detection in the settings.")
+                return
             
             if current_text == "Show Original Image":
                 # Currently showing cropped, switch to original
@@ -854,14 +881,12 @@ class MainWindow:
         self.details_text.config(state='disabled')
         self.discord_link_button.config(state='disabled')
         
-        # Disable show original button if it exists
-        if self.show_original_button:
-            self.show_original_button.config(state='disabled')
+        # Disable show original button (now always present)
+        self.show_original_button.config(state='disabled')
         
-        # Clear result preview if map detection is enabled
-        if hasattr(self, 'result_preview_canvas') and self.result_preview_canvas:
-            self._clear_result_preview()
-            self.preview_status_var.set("Select a result to see cropped map")
+        # Clear result preview (now always present)
+        self._clear_result_preview()
+        self.preview_status_var.set("Select a result to see image preview")
         
         self.current_results = []
         
@@ -889,6 +914,13 @@ class MainWindow:
         # Reset expired link warning flag for this cache build
         if hasattr(self, '_cache_expired_warning_shown'):
             delattr(self, '_cache_expired_warning_shown')
+        
+        # Store original map art detection setting and force disable for cache building
+        self._original_map_art_setting = self.config.vision.enable_map_art_detection
+        self.config.vision.enable_map_art_detection = False
+        
+        # Update UI to show cache building state
+        self.map_art_info_label.config(text="Cache building: Map art detection temporarily disabled for speed")
         
         # Disable buttons during cache build
         self.preprocess_button.config(state='disabled')
@@ -922,6 +954,19 @@ class MainWindow:
         """Handle cache build completion"""
         self.progress_bar.grid_remove()
         
+        # Restore original map art detection setting
+        if hasattr(self, '_original_map_art_setting'):
+            # Restore the original setting
+            self.config.vision.enable_map_art_detection = self._original_map_art_setting
+            self.map_art_var.set(self._original_map_art_setting)
+            delattr(self, '_original_map_art_setting')
+        
+        # Restore original info text
+        self.map_art_info_label.config(text="Auto-disabled during cache building, usually more accurate")
+        
+        # Update UI state
+        self._update_map_art_status()
+        
         if success:
             self.progress_var.set("Cache built successfully")
             self._update_cache_status()
@@ -949,6 +994,20 @@ class MainWindow:
         """Handle cache build error"""
         self.progress_bar.grid_remove()
         self.progress_var.set("Cache build failed")
+        
+        # Restore original map art detection setting
+        if hasattr(self, '_original_map_art_setting'):
+            # Restore the original setting
+            self.config.vision.enable_map_art_detection = self._original_map_art_setting
+            self.map_art_var.set(self._original_map_art_setting)
+            delattr(self, '_original_map_art_setting')
+        
+        # Restore original info text
+        self.map_art_info_label.config(text="Auto-disabled during cache building, usually more accurate")
+        
+        # Update UI state
+        self._update_map_art_status()
+        
         self.preprocess_button.config(state='normal')
         self.search_button.config(state='normal')
         self._show_error(f"Cache build failed: {error_message}")
@@ -1243,28 +1302,43 @@ class MainWindow:
         """Try to load previously parsed messages"""
         try:
             cache_manager = self.search_engine.cache_manager
+            current_model = self.config.clip.model_name
             
-            # First, check if we have any saved parsed messages at all
-            if not cache_manager.parsed_messages_file.exists() or not cache_manager.parsed_metadata_file.exists():
-                logger.info("No previously parsed messages found")
+            # Get the correct paths for the current model
+            cache_paths = cache_manager._get_model_cache_paths(current_model)
+            parsed_messages_file = cache_paths['parsed_messages_file']
+            parsed_metadata_file = cache_paths['parsed_metadata_file']
+            
+            # Check if we have parsed messages (cache manager will check other models too)
+            # First, we need to find any HTML file that has parsed messages
+            html_file_to_check = None
+            
+            # Try to find an HTML file from any model's cache
+            all_models = ['ViT-B/32', 'ViT-L/14', 'RN50x64', 'ViT-B/16']
+            for model in all_models:
+                model_paths = cache_manager._get_model_cache_paths(model)
+                if model_paths['parsed_metadata_file'].exists():
+                    try:
+                        with open(model_paths['parsed_metadata_file'], 'rb') as f:
+                            metadata = pickle.load(f)
+                        html_file_to_check = metadata.html_file_path
+                        break
+                    except:
+                        continue
+            
+            if html_file_to_check is None:
+                logger.info(f"No previously parsed messages found for any model")
                 return
             
-            # Load the metadata to get the HTML file path
-            with open(cache_manager.parsed_metadata_file, 'rb') as f:
-                metadata = pickle.load(f)
-            
-            html_path = metadata.html_file_path
-            logger.info(f"Found previously parsed messages for HTML file: {html_path}")
-            
-            # Check if this HTML file is still valid
-            if cache_manager.has_parsed_messages(html_path):
-                logger.info(f"Loading previously parsed messages for {html_path}")
+            # Check if this HTML file is still valid (cache manager handles cross-model checking)
+            if cache_manager.has_parsed_messages(html_file_to_check):
+                logger.info(f"Loading previously parsed messages for {html_file_to_check}")
                 
-                # Load the messages
+                # Load the messages (cache manager will load from any model and copy if needed)
                 messages = cache_manager.load_parsed_messages()
                 if messages:
                     self.discord_messages = messages
-                    self.html_archive_path = Path(html_path)
+                    self.html_archive_path = Path(html_file_to_check)
                     self.html_file_var.set(str(self.html_archive_path))
                     
                     # Update the UI
@@ -1286,7 +1360,7 @@ class MainWindow:
             try:
                 cache_manager.clear_parsed_messages()
             except:
-                pass 
+                pass
 
     def _update_model_info(self):
         """Update model information display"""
@@ -1427,11 +1501,11 @@ class MainWindow:
                             if self.config.vision.enable_map_art_detection:
                                 current_model = self.config.clip.model_name
                                 if current_model == "ViT-L/14":
-                                    map_art_status = "Enabled - Recommended with ViT-L/14. Slows cache building."
+                                    map_art_status = "Enabled - Recommended with ViT-L/14. Auto-disabled during cache building."
                                 else:
-                                    map_art_status = "Enabled - Slower cache building. Recommend ViT-L/14 for best results."
+                                    map_art_status = "Enabled - Usually more accurate. Recommend ViT-L/14 for best results."
                             else:
-                                map_art_status = "Disabled - Faster cache building, uses full images"
+                                map_art_status = "Disabled - Uses full images for similarity search"
                         except Exception as e:
                             logger.error(f"Failed to prepare map art status: {e}")
                             map_art_status = "Status: Error"
@@ -1507,12 +1581,13 @@ class MainWindow:
             if self.config.vision.enable_map_art_detection:
                 # Get current model for recommendation
                 current_model = self.config.clip.model_name
+                
                 if current_model == "ViT-L/14":
-                    status_text = "Enabled - Recommended with ViT-L/14. Slows cache building."
+                    status_text = "Enabled - Recommended with ViT-L/14. Auto-disabled during cache building."
                 else:
-                    status_text = "Enabled - Slower cache building. Recommend ViT-L/14 for best results."
+                    status_text = "Enabled - Usually more accurate. Recommend ViT-L/14 for best results."
             else:
-                status_text = "Disabled - Faster cache building, uses full images"
+                status_text = "Disabled - Uses full images for similarity search"
             self.map_art_status_var.set(status_text)
         except Exception as e:
             logger.error(f"Failed to update map art detection status: {e}")
@@ -1568,15 +1643,23 @@ class MainWindow:
             if new_state:
                 current_model = self.config.clip.model_name
                 if current_model == "ViT-L/14":
-                    message = ("Map art detection enabled. Images will be analyzed to detect and crop map artwork before similarity search.\n\n"
-                             "Performance: This will slow down cache building but provides optimal accuracy with ViT-L/14.")
+                    message = ("Map art detection enabled! 🎯\n\n"
+                             "✅ Images will be analyzed to detect and crop map artwork before similarity search\n"
+                             "⚡ Auto-disabled during cache building for speed\n"
+                             "🎯 Usually more accurate than using full images\n"
+                             "🏆 Optimal results with ViT-L/14 model")
                 else:
-                    message = ("Map art detection enabled. Images will be analyzed to detect and crop map artwork before similarity search.\n\n"
-                             "Performance: This will slow down cache building for both models. For best results with map detection, consider switching to ViT-L/14.")
-                messagebox.showinfo("Map Art Detection", message)
+                    message = ("Map art detection enabled! 🎯\n\n"
+                             "✅ Images will be analyzed to detect and crop map artwork before similarity search\n"
+                             "⚡ Auto-disabled during cache building for speed\n"
+                             "🎯 Usually more accurate than using full images\n"
+                             "💡 For best results, consider switching to ViT-L/14")
+                messagebox.showinfo("Map Art Detection Enabled", message)
             else:
-                messagebox.showinfo("Map Art Detection", 
-                                  "Map art detection disabled. Full images will be used for similarity search.\n\n"
-                                  "Performance: This will speed up cache building but may reduce accuracy for map artwork searches.")
+                messagebox.showinfo("Map Art Detection Disabled", 
+                                  "Map art detection disabled. 📋\n\n"
+                                  "• Full images will be used for similarity search\n"
+                                  "• Faster processing but may be less accurate for map artwork\n"
+                                  "• Cache building performance unaffected")
         except Exception as e:
-            logger.error(f"Failed to show map art toggle message: {e}") 
+            logger.error(f"Failed to show map art toggle message: {e}")

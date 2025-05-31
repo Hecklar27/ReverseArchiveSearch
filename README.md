@@ -14,7 +14,7 @@
 ## Performance Comparison
 - **Real-time Search**: 2+ minutes (downloads images on-demand)
 - **Cached Search**: 1-5 seconds (uses pre-computed embeddings)
-- **Mapart Detection**: Improves accuracy, but makes cache building slower
+- **Mapart Detection**: Improves accuracy (usually) but makes cache building slower
 **Different Clip Models**: L/14 is the most accurate, B/32 is the quickest. With Mapart Detection enabled, always use L/14
 
 ### Subsequent Searches after Caching

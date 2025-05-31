@@ -18,16 +18,19 @@ logger = logging.getLogger(__name__)
 class MapArtDetector:
     """Detects and crops map art from Minecraft screenshots"""
     
-    def __init__(self, method: str = "opencv", confidence_threshold: float = 0.5):
+    def __init__(self, method: str = "opencv", confidence_threshold: float = 0.5, 
+                 use_fast_detection: bool = False):
         """
         Initialize map art detector.
         
         Args:
             method: Detection method ('opencv', 'yolo', 'segment', 'hybrid')
             confidence_threshold: Minimum confidence for detections
+            use_fast_detection: Use faster, less precise detection algorithms
         """
         self.method = method
         self.confidence_threshold = confidence_threshold
+        self.use_fast_detection = use_fast_detection
         self.model = None
         
         # Initialize the selected detection method
@@ -144,6 +147,23 @@ class MapArtDetector:
         of detailed map artwork vs pixelated Minecraft blocks.
         """
         try:
+            # Choose detection method based on performance setting
+            if self.use_fast_detection:
+                # Use fast detection for better performance during cache building
+                return self._detect_opencv_fast(image)
+            else:
+                # Use accurate detection for best results
+                return self._detect_opencv_accurate(image)
+                
+        except Exception as e:
+            logger.error(f"OpenCV detection failed: {e}")
+            return []
+    
+    def _detect_opencv_accurate(self, image: np.ndarray) -> List[Tuple[int, int, int, int]]:
+        """
+        Original accurate detection method (existing implementation).
+        """
+        try:
             # Convert to grayscale for analysis
             gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
             height, width = gray.shape
@@ -173,7 +193,7 @@ class MapArtDetector:
             return [map_bbox]
             
         except Exception as e:
-            logger.error(f"OpenCV detection failed: {e}")
+            logger.error(f"OpenCV accurate detection failed: {e}")
             return []
     
     def _find_center_region(self, gray: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
@@ -577,15 +597,226 @@ class MapArtDetector:
         
         return vis_image
 
+    def process_images_batch(self, images: List[Union[Image.Image, np.ndarray]]) -> List[List[Image.Image]]:
+        """
+        Process multiple images in batch for map art detection (optimized for cache building).
+        
+        Args:
+            images: List of input images
+            
+        Returns:
+            List of lists - each inner list contains cropped map art images for that input
+        """
+        if not images:
+            return []
+        
+        results = []
+        
+        # Convert all images to numpy arrays once
+        numpy_images = []
+        for image in images:
+            if isinstance(image, Image.Image):
+                numpy_images.append(np.array(image.convert('RGB')))
+            else:
+                numpy_images.append(image)
+        
+        # Process all images with optimized batch detection
+        if self.method == "opencv":
+            batch_results = self._detect_opencv_batch(numpy_images)
+        else:
+            # Fallback to individual processing for other methods
+            batch_results = [self.detect_map_art(img) for img in numpy_images]
+        
+        # Crop detected regions for each image
+        for i, (original_image, regions) in enumerate(zip(images, batch_results)):
+            cropped_images = []
+            for bbox in regions:
+                cropped = self.crop_map_art(original_image, bbox)
+                if cropped is not None:
+                    cropped_images.append(cropped)
+            results.append(cropped_images)
+        
+        return results
 
-def create_map_art_detector(method: str = "opencv") -> MapArtDetector:
+    def _detect_opencv_batch(self, images: List[np.ndarray]) -> List[List[Tuple[int, int, int, int]]]:
+        """
+        Batch OpenCV detection optimized for multiple images.
+        
+        Args:
+            images: List of numpy arrays
+            
+        Returns:
+            List of bounding box lists for each image
+        """
+        results = []
+        
+        # Pre-convert all images to grayscale in batch
+        gray_images = []
+        for image in images:
+            try:
+                gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+                gray_images.append(gray)
+            except Exception as e:
+                logger.debug(f"Failed to convert image to grayscale: {e}")
+                gray_images.append(None)
+        
+        # Process each image with optimized single-pass detection
+        for i, gray in enumerate(gray_images):
+            if gray is None:
+                results.append([])
+                continue
+                
+            try:
+                # Use simplified detection for batch processing
+                regions = self._detect_opencv_fast(gray)
+                results.append(regions)
+            except Exception as e:
+                logger.debug(f"Batch detection failed for image {i}: {e}")
+                results.append([])
+        
+        return results
+
+    def _detect_opencv_fast(self, gray: np.ndarray) -> List[Tuple[int, int, int, int]]:
+        """
+        Fast OpenCV detection with simplified algorithm for batch processing.
+        
+        This method uses a simplified approach focused on speed over precision.
+        """
+        try:
+            height, width = gray.shape
+            
+            # Use larger initial region for faster processing
+            margin_x = int(width * 0.15)  # Reduced from 0.2
+            margin_y = int(height * 0.15)
+            
+            # Initial region
+            x = margin_x
+            y = margin_y
+            w = width - 2 * margin_x
+            h = height - 2 * margin_y
+            
+            # Quick validation with simplified detail check
+            region = gray[y:y+h, x:x+w]
+            
+            # Simplified detail calculation (faster)
+            if self._quick_detail_check(region):
+                # Use coarser boundary detection for speed
+                final_bbox = self._fast_boundary_detection(gray, (x, y, w, h))
+                if final_bbox is not None:
+                    return [final_bbox]
+            
+            return []
+            
+        except Exception as e:
+            logger.debug(f"Fast OpenCV detection failed: {e}")
+            return []
+
+    def _quick_detail_check(self, region: np.ndarray) -> bool:
+        """Quick detail check optimized for batch processing."""
+        try:
+            if region.size == 0:
+                return False
+            
+            # Single simple metric for speed
+            edges = cv2.Canny(region, 50, 150)
+            edge_density = np.sum(edges > 0) / region.size
+            
+            return edge_density > 0.01  # Lower threshold for speed
+            
+        except Exception:
+            return False
+
+    def _fast_boundary_detection(self, gray: np.ndarray, initial_region: Tuple[int, int, int, int]) -> Optional[Tuple[int, int, int, int]]:
+        """Fast boundary detection with reduced precision for batch processing."""
+        x, y, w, h = initial_region
+        height, width = gray.shape
+        
+        # Use larger steps for faster processing
+        step_size = max(5, min(w, h) // 20)
+        
+        # Find boundaries with larger steps
+        left_boundary = self._find_boundary_fast(gray, x, y, w, h, 'left', step_size)
+        right_boundary = self._find_boundary_fast(gray, x, y, w, h, 'right', step_size)
+        top_boundary = self._find_boundary_fast(gray, x, y, w, h, 'top', step_size)
+        bottom_boundary = self._find_boundary_fast(gray, x, y, w, h, 'bottom', step_size)
+        
+        # Calculate final bounding box
+        final_x = left_boundary
+        final_y = top_boundary
+        final_w = right_boundary - left_boundary
+        final_h = bottom_boundary - top_boundary
+        
+        # Validate boundaries
+        if final_w > 50 and final_h > 50 and final_x >= 0 and final_y >= 0:
+            return (final_x, final_y, final_w, final_h)
+        
+        return None
+
+    def _find_boundary_fast(self, gray: np.ndarray, x: int, y: int, w: int, h: int, 
+                           direction: str, step_size: int) -> int:
+        """Fast boundary detection with larger steps."""
+        height, width = gray.shape
+        
+        if direction == 'left':
+            for offset in range(0, w // 2, step_size):
+                test_x = x + offset
+                if test_x >= width:
+                    break
+                strip_width = min(step_size * 2, w - offset)
+                if test_x + strip_width < width:
+                    strip = gray[y:y+h, test_x:test_x+strip_width]
+                    if self._quick_detail_check(strip):
+                        return max(0, test_x - step_size)
+            return x
+            
+        elif direction == 'right':
+            for offset in range(0, w // 2, step_size):
+                test_x = x + w - offset
+                if test_x <= x:
+                    break
+                strip_width = min(step_size * 2, offset)
+                if test_x - strip_width >= 0:
+                    strip = gray[y:y+h, test_x-strip_width:test_x]
+                    if self._quick_detail_check(strip):
+                        return min(width, test_x + step_size)
+            return x + w
+            
+        elif direction == 'top':
+            for offset in range(0, h // 2, step_size):
+                test_y = y + offset
+                if test_y >= height:
+                    break
+                strip_height = min(step_size * 2, h - offset)
+                if test_y + strip_height < height:
+                    strip = gray[test_y:test_y+strip_height, x:x+w]
+                    if self._quick_detail_check(strip):
+                        return max(0, test_y - step_size)
+            return y
+            
+        elif direction == 'bottom':
+            for offset in range(0, h // 2, step_size):
+                test_y = y + h - offset
+                if test_y <= y:
+                    break
+                strip_height = min(step_size * 2, offset)
+                if test_y - strip_height >= 0:
+                    strip = gray[test_y-strip_height:test_y, x:x+w]
+                    if self._quick_detail_check(strip):
+                        return min(height, test_y + step_size)
+            return y + h
+        
+        return 0
+
+
+def create_map_art_detector(method: str = "opencv", use_fast_detection: bool = False) -> MapArtDetector:
     """
     Factory function to create a map art detector.
     
     Args:
         method: Detection method to use
+        use_fast_detection: Use faster, less precise detection algorithms
         
     Returns:
         Configured MapArtDetector instance
     """
-    return MapArtDetector(method=method) 
+    return MapArtDetector(method=method, use_fast_detection=use_fast_detection) 

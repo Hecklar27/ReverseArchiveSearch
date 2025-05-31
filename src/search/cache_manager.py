@@ -561,48 +561,106 @@ class EmbeddingCacheManager:
     def has_parsed_messages(self, html_file_path: str) -> bool:
         """Check if we have valid parsed messages for the given HTML file"""
         try:
-            if not self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'].exists() or not self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'].exists():
-                return False
+            current_model = self.clip_engine.model_name
+            current_paths = self._get_model_cache_paths(current_model)
             
-            # Load metadata
-            with open(self._get_model_cache_paths(self.clip_engine.model_name)['parsed_metadata_file'], 'rb') as f:
-                metadata = pickle.load(f)
+            # First check current model
+            if self._check_parsed_messages_for_model(html_file_path, current_model):
+                return True
             
-            # Check if HTML file path matches
-            if metadata.html_file_path != html_file_path:
-                logger.info(f"HTML file path changed: {metadata.html_file_path} -> {html_file_path}")
-                return False
+            # If current model doesn't have them, check other models
+            other_models = ['ViT-B/32', 'ViT-L/14', 'RN50x64', 'ViT-B/16']
+            for model in other_models:
+                if model != current_model:
+                    if self._check_parsed_messages_for_model(html_file_path, model):
+                        logger.info(f"Found valid parsed messages for {html_file_path} in {model} cache")
+                        return True
             
-            # Check if HTML file still exists
-            html_path = Path(html_file_path)
-            if not html_path.exists():
-                logger.info(f"HTML file no longer exists: {html_file_path}")
-                return False
-            
-            # Check if HTML file has been modified
-            current_mtime = html_path.stat().st_mtime
-            if abs(current_mtime - metadata.html_file_mtime) > 1:  # 1 second tolerance
-                logger.info(f"HTML file modified: {metadata.html_file_mtime} -> {current_mtime}")
-                return False
-            
-            logger.info(f"Found valid parsed messages for {html_file_path}")
-            return True
+            return False
             
         except Exception as e:
             logger.warning(f"Error checking parsed messages: {e}")
             return False
     
+    def _check_parsed_messages_for_model(self, html_file_path: str, model_name: str) -> bool:
+        """Check if a specific model has valid parsed messages for the given HTML file"""
+        try:
+            paths = self._get_model_cache_paths(model_name)
+            parsed_messages_file = paths['parsed_messages_file']
+            parsed_metadata_file = paths['parsed_metadata_file']
+            
+            if not parsed_messages_file.exists() or not parsed_metadata_file.exists():
+                return False
+            
+            # Load metadata
+            with open(parsed_metadata_file, 'rb') as f:
+                metadata = pickle.load(f)
+            
+            # Check if HTML file path matches
+            if metadata.html_file_path != html_file_path:
+                return False
+            
+            # Check if HTML file still exists
+            html_path = Path(html_file_path)
+            if not html_path.exists():
+                return False
+            
+            # Check if HTML file has been modified
+            current_mtime = html_path.stat().st_mtime
+            if abs(current_mtime - metadata.html_file_mtime) > 1:  # 1 second tolerance
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Error checking parsed messages for {model_name}: {e}")
+            return False
+    
     def load_parsed_messages(self) -> Optional[List[DiscordMessage]]:
         """Load previously parsed Discord messages"""
         try:
-            if not self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'].exists():
-                return None
+            current_model = self.clip_engine.model_name
+            current_paths = self._get_model_cache_paths(current_model)
             
-            with open(self._get_model_cache_paths(self.clip_engine.model_name)['parsed_messages_file'], 'rb') as f:
-                messages = pickle.load(f)
+            # First try current model
+            if current_paths['parsed_messages_file'].exists():
+                with open(current_paths['parsed_messages_file'], 'rb') as f:
+                    messages = pickle.load(f)
+                logger.info(f"Loaded {len(messages)} parsed Discord messages from cache for {current_model}")
+                return messages
             
-            logger.info(f"Loaded {len(messages)} parsed Discord messages from cache")
-            return messages
+            # If current model doesn't have parsed messages, check other models
+            logger.info(f"No parsed messages found for {current_model}, checking other models...")
+            other_models = ['ViT-B/32', 'ViT-L/14', 'RN50x64', 'ViT-B/16']  # Common models
+            
+            for model in other_models:
+                if model != current_model:
+                    other_paths = self._get_model_cache_paths(model)
+                    if other_paths['parsed_messages_file'].exists():
+                        try:
+                            with open(other_paths['parsed_messages_file'], 'rb') as f:
+                                messages = pickle.load(f)
+                            
+                            # Copy to current model's cache for future use
+                            logger.info(f"Found parsed messages in {model} cache, copying to {current_model}")
+                            
+                            # Load metadata from source model to preserve HTML file info
+                            if other_paths['parsed_metadata_file'].exists():
+                                with open(other_paths['parsed_metadata_file'], 'rb') as f:
+                                    source_metadata = pickle.load(f)
+                                
+                                # Save to current model's cache
+                                self.save_parsed_messages(messages, source_metadata.html_file_path)
+                                
+                                logger.info(f"Copied {len(messages)} parsed messages from {model} to {current_model}")
+                                return messages
+                                
+                        except Exception as e:
+                            logger.warning(f"Failed to load parsed messages from {model}: {e}")
+                            continue
+            
+            logger.info("No parsed messages found in any model cache")
+            return None
             
         except Exception as e:
             logger.error(f"Failed to load parsed messages: {e}")

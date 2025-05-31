@@ -15,6 +15,11 @@ class VisionConfig:
     confidence_threshold: float = 0.5  # Minimum confidence for detections
     crop_padding: int = 10  # Extra padding around detected regions
     fallback_to_full_image: bool = True  # Use full image if no map art detected
+    
+    # NEW: Performance optimization settings
+    use_fast_detection: bool = False  # Use faster, less precise detection during cache building
+    batch_processing: bool = True  # Enable batch processing for better performance
+    cache_detection_results: bool = True  # Cache detection results to avoid reprocessing
 
 @dataclass
 class ClipConfig:
