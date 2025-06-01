@@ -3,7 +3,7 @@
 ## Quick Start
 1. Install NVIDIA Cuda Toolkit (If you have an AMD card skip this step, will have to use CPU based processing)
    - the GPU detection is being funny, so if you installed CUDA and have an NVIDIA GPU, select PyTorch with CUDA (Option 2)
-2. **Activate virtual environment**: `python -m venv .venv` then `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Linux/Mac) to enter the virtual enviroment (you will have (.venv) infront of your messages)
+2. **Activate virtual environment**: Run in the project directory: `python -m venv .venv` then `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Linux/Mac) to enter the virtual enviroment (you will have (.venv) infront of your messages)
 3. Install dependencies: `python setup.py` (This takes a while so just leave it be if it seems stuck)
 4. Run: `python main.py`
 5. Select your query image
