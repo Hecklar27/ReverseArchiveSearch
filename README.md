@@ -3,7 +3,7 @@
 ## Quick Start
 1. Install NVIDIA Cuda Toolkit (If you have an AMD card skip this step, will have to use CPU based processing)
    - the GPU detection is being funny, so if you installed CUDA and have an NVIDIA GPU, select PyTorch with CUDA (Option 2)
-2. **Activate virtual environment**: `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Linux/Mac) to enter the virtual enviroment (you will have (.venv) infront of your messages)
+2. **Activate virtual environment**: `python -m venv .venv` then `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Linux/Mac) to enter the virtual enviroment (you will have (.venv) infront of your messages)
 3. Install dependencies: `python setup.py` (This takes a while so just leave it be if it seems stuck)
 4. Run: `python main.py`
 5. Select your query image
@@ -14,8 +14,6 @@
 ## Performance Comparison
 - **Real-time Search**: 2+ minutes (downloads images on-demand)
 - **Cached Search**: 1-5 seconds (uses pre-computed embeddings)
-- **Mapart Detection**: Improves accuracy (usually) but makes cache building slower
-**Different Clip Models**: L/14 is the most accurate, B/32 is the quickest. With Mapart Detection enabled, always use L/14
 
 ### Subsequent Searches after Caching
 - Click "Cached Search" for instant results

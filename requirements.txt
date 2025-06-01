@@ -23,6 +23,9 @@ regex>=2023.6.0
 # Install separately: pip install git+https://github.com/openai/CLIP.git
 # Version: clip @ git+https://github.com/openai/CLIP.git@dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1
 
+# === DINOv2 Support ===
+transformers>=4.30.0
+
 # === Core Dependencies ===
 colorlog==6.9.0
 certifi==2025.4.26

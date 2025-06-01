@@ -12,9 +12,9 @@ from typing import List, Dict, Optional, Tuple, Any
 from pathlib import Path
 from datetime import datetime, timedelta
 
-from data.models import DiscordMessage, DiscordAttachment, ProcessingStats
-from core.config import Config
-from .clip_engine import CLIPEngine
+from src.data.models import DiscordMessage, DiscordAttachment, ProcessingStats
+from src.core.config import Config
+from .engine_factory import UniversalEngine
 from .image_downloader import ImageDownloader
 
 logger = logging.getLogger(__name__)
@@ -43,15 +43,29 @@ class CacheMetadata:
         
     def add_image_metadata(self, index: int, message: DiscordMessage, attachment: DiscordAttachment):
         """Add metadata for an image at the given index"""
-        self.index_to_metadata[index] = {
-            'message_id': message.id,
-            'message_type': message.type,
-            'filename': attachment.filename,
-            'url': attachment.url,
-            'author_name': message.author.name,
-            'timestamp': message.timestamp,
-            'content': message.content[:100] if message.content else "",
-        }
+        try:
+            # Store metadata with compatible field names for validation
+            self.index_to_metadata[index] = {
+                'message_id': message.id,
+                'message_type': message.type,
+                'filename': attachment.filename,
+                'url': attachment.url,
+                'author_name': message.author.name,
+                'timestamp': message.timestamp,
+                'content': message.content[:100] if message.content else "",
+            }
+        except Exception as e:
+            logger.error(f"Failed to add image metadata for index {index}: {e}")
+            # Set minimal metadata to avoid complete failure
+            self.index_to_metadata[index] = {
+                'message_id': getattr(message, 'id', 'unknown'),
+                'message_type': getattr(message, 'type', 'default'),
+                'filename': getattr(attachment, 'filename', 'unknown'),
+                'url': getattr(attachment, 'url', 'unknown'),
+                'author_name': 'Unknown',
+                'timestamp': 'Unknown',
+                'content': ''
+            }
     
     def is_expired(self, max_age_days: int) -> bool:
         """Check if cache is expired"""
@@ -75,18 +89,32 @@ class EmbeddingCacheManager:
     
     def __init__(self, config: Config):
         self.config = config
-        self.cache_dir = Path(config.cache.cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.clip_engine = UniversalEngine(config)  # Use UniversalEngine instead of CLIPEngine
         
-        # Initialize CLIP engine
-        self.clip_engine = CLIPEngine(config)
+        # Initialize image downloader for cache building with proper parameters
         self.image_downloader = ImageDownloader(timeout=10, max_retries=3, max_workers=8)
         
-        # Cache will be model-specific
-        self._embeddings = None
-        self._metadata = None
-        self._current_model = None
+        # Cache directories - model-specific
+        self.cache_root = Path("cache")
+        self.cache_dir = self.cache_root / config.clip.get_cache_subdirectory()
         
+        # Create cache directory if it doesn't exist
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Cache file paths
+        self.embeddings_file = self.cache_dir / "embeddings.npy"
+        self.metadata_file = self.cache_dir / "metadata.pkl"
+        self.parsed_messages_file = self.cache_dir / "parsed_messages.pkl"
+        self.parsed_metadata_file = self.cache_dir / "parsed_metadata.pkl"
+        
+        # In-memory cache
+        self._embeddings: Optional[np.ndarray] = None
+        self._metadata: Optional[CacheMetadata] = None
+        self._current_model: Optional[str] = None
+        
+        logger.info(f"EmbeddingCacheManager initialized for model: {self.clip_engine.model_name}")
+        logger.info(f"Cache directory: {self.cache_dir}")
+    
     def _get_model_cache_paths(self, model_name: str = None):
         """Get cache file paths for specific model"""
         if model_name is None:
@@ -273,7 +301,7 @@ class EmbeddingCacheManager:
             # Use much smaller batches for large models to prevent GPU memory issues
             batch_size = 8  # Reduced from 16 to 8 for better memory management
             logger.info(f"PERFORMANCE OPTIMIZATION: Using reduced batch size {batch_size} for large model {self.clip_engine.model_name}")
-        elif self.clip_engine.model_name in ["ViT-B/32", "ViT-B/16"]:
+        elif self.clip_engine.model_name in ["ViT-B/16"]:
             # Smaller models can handle larger batches but still be conservative
             batch_size = min(16, batch_size)  # Max 16 for smaller models
             logger.info(f"PERFORMANCE OPTIMIZATION: Using optimized batch size {batch_size} for model {self.clip_engine.model_name}")
@@ -569,7 +597,7 @@ class EmbeddingCacheManager:
                 return True
             
             # If current model doesn't have them, check other models
-            other_models = ['ViT-B/32', 'ViT-L/14', 'RN50x64', 'ViT-B/16']
+            other_models = ['ViT-L/14', 'RN50x64', 'ViT-B/16', 'DINOv2-Base']
             for model in other_models:
                 if model != current_model:
                     if self._check_parsed_messages_for_model(html_file_path, model):
@@ -631,7 +659,7 @@ class EmbeddingCacheManager:
             
             # If current model doesn't have parsed messages, check other models
             logger.info(f"No parsed messages found for {current_model}, checking other models...")
-            other_models = ['ViT-B/32', 'ViT-L/14', 'RN50x64', 'ViT-B/16']  # Common models
+            other_models = ['ViT-L/14', 'RN50x64', 'ViT-B/16', 'DINOv2-Base']
             
             for model in other_models:
                 if model != current_model:
@@ -742,7 +770,7 @@ class EmbeddingCacheManager:
         return status
     
     def switch_model(self, new_model_name: str):
-        """Switch to a different CLIP model and update cache accordingly"""
+        """Switch to a different model (CLIP or DINOv2) and update cache accordingly"""
         if new_model_name == self.clip_engine.model_name:
             logger.info(f"Already using model {new_model_name}")
             return
@@ -754,28 +782,44 @@ class EmbeddingCacheManager:
         self._metadata = None
         self._current_model = None
         
-        # Update CLIP engine with new model
-        old_model = self.clip_engine.model_name
-        self.clip_engine.model_name = new_model_name
+        # Store old engine for cleanup and rollback
+        old_engine = self.clip_engine
+        old_model = old_engine.model_name
         
-        # Reinitialize CLIP engine with new model
+        # Update config model name
+        self.config.clip.model_name = new_model_name
+        
+        # Create new UniversalEngine with the new model
         try:
-            # Reload the CLIP model
-            import clip
-            self.clip_engine.model, self.clip_engine.preprocess = clip.load(new_model_name, device=self.clip_engine.device)
-            self.clip_engine.model_name = new_model_name
+            from .engine_factory import UniversalEngine
+            new_engine = UniversalEngine(self.config)
             
-            # Update embedding dimensions
-            model_info = self.config.clip.get_model_info(new_model_name)
-            if model_info:
-                self.clip_engine.embedding_dim = model_info['embedding_dim']
+            # Clean up old engine
+            try:
+                old_engine.cleanup()
+            except Exception as e:
+                logger.warning(f"Error cleaning up old engine: {e}")
             
-            logger.info(f"Successfully switched to model {new_model_name}")
+            # Replace with new engine
+            self.clip_engine = new_engine
+            
+            # Update cache directory for new model
+            self.cache_dir = self.cache_root / self.config.clip.get_cache_subdirectory()
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Update cache file paths
+            self.embeddings_file = self.cache_dir / "embeddings.npy"
+            self.metadata_file = self.cache_dir / "metadata.pkl"
+            self.parsed_messages_file = self.cache_dir / "parsed_messages.pkl"
+            self.parsed_metadata_file = self.cache_dir / "parsed_metadata.pkl"
+            
+            logger.info(f"Successfully switched to {new_engine.get_model_type().upper()} model {new_model_name}")
             
         except Exception as e:
             # Rollback on failure
             logger.error(f"Failed to switch to model {new_model_name}: {e}")
-            self.clip_engine.model_name = old_model
+            self.config.clip.model_name = old_model
+            self.clip_engine = old_engine
             raise
     
     def clear_cache_for_model(self, model_name: str) -> None:

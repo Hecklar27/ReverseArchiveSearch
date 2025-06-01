@@ -24,7 +24,7 @@ class VisionConfig:
 @dataclass
 class ClipConfig:
     """Configuration for CLIP model"""
-    model_name: str = "ViT-L/14"  # Default to accurate but slow model
+    model_name: str = "DINOv2-Base"  # Default to DINOv2 for exact matching
     device: str = "auto"  # auto, cuda, cpu
     batch_size: int = 16  # Will be adjusted based on model
     use_mixed_precision: bool = True  # Enable mixed precision for faster processing
@@ -37,15 +37,18 @@ class ClipConfig:
             "embedding_dim": 768,
             "recommended_batch_size": 8,
             "speed_rating": "Slow",
-            "accuracy_rating": "High"
+            "accuracy_rating": "High",
+            "model_type": "clip"
         },
-        "ViT-B/32": {
-            "display_name": "ViT-B/32 (Fast, Less Accurate)", 
-            "description": "Faster processing, lower accuracy (~30s-2min for cache build)",
-            "embedding_dim": 512,
+        "DINOv2-Base": {
+            "display_name": "DINOv2-Base (Exact Matches, Fast)",
+            "description": "Structural similarity, exact matches (~1-3min for cache build)",
+            "embedding_dim": 768,
             "recommended_batch_size": 16,
             "speed_rating": "Fast",
-            "accuracy_rating": "Good"
+            "accuracy_rating": "Exact",
+            "model_type": "dinov2",
+            "similarity_threshold": 0.90  # High threshold for exact matches
         }
     }
     
@@ -70,7 +73,13 @@ class ClipConfig:
         for model_name, info in cls.MODEL_OPTIONS.items():
             if info["display_name"] == display_name:
                 return model_name
-        return "ViT-L/14"  # Default fallback
+        return "DINOv2-Base"  # Default fallback updated
+    
+    @classmethod
+    def get_model_type(cls, model_name: str) -> str:
+        """Get model type (clip or dinov2)"""
+        model_info = cls.get_model_info(model_name)
+        return model_info.get("model_type", "clip")
     
     def get_optimal_batch_size(self) -> int:
         """Get optimal batch size for current model"""

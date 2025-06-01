@@ -302,7 +302,7 @@ class CLIPEngine:
                 ]).to(self.device)
                 
                 with torch.no_grad():
-                    # Skip mixed precision for smaller models (ViT-B/32) as it adds overhead
+                    # Skip mixed precision for smaller models as it adds overhead
                     if self.use_mixed_precision and self.model_name in ["ViT-L/14", "ViT-L/14@336px"]:
                         with self._get_autocast_context():
                             image_features = self.model.encode_image(image_tensors)

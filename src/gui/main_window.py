@@ -293,32 +293,27 @@ class MainWindow:
     def _show_device_info(self):
         """Update device information display"""
         try:
-            # CLIP engine - show GPU/CPU info
-            device_info = self.search_engine.optimized_strategy.clip_engine.get_device_info()
-            
-            # Get current model info for performance display
+            # Get model information
             model_info = self.config.clip.get_model_info(self.config.clip.model_name)
+            model_type = self.config.clip.get_model_type(self.config.clip.model_name)
             
-            device_text = f"Engine: CLIP {self.config.clip.model_name} ({device_info['device'].upper()})"
-            
-            if device_info.get('using_cuda', False):
-                # Using CUDA - show GPU info
-                gpu_name = device_info.get('gpu_name', 'Unknown GPU')
-                gpu_memory = device_info.get('gpu_memory_gb', 'Unknown')
-                device_text += f" - {gpu_name}, {gpu_memory}GB"
-            elif device_info.get('gpu_available', False):
-                # CUDA available but not used
-                gpu_name = device_info.get('gpu_name', 'Unknown GPU')
-                device_text += f" - GPU available: {gpu_name}"
+            # Get device info from the appropriate engine
+            if hasattr(self.search_engine, 'optimized_strategy') and hasattr(self.search_engine.optimized_strategy, 'clip_engine'):
+                device_info = self.search_engine.optimized_strategy.clip_engine.get_device_info()
+                device_text = device_info.get('device', f'{model_type.upper()} {self.config.clip.model_name}')
+                
+                # Add performance ratings
+                if model_info:
+                    speed = model_info.get('speed_rating', 'Unknown')
+                    accuracy = model_info.get('accuracy_rating', 'Unknown')
+                    device_text += f" | Speed: {speed}, Accuracy: {accuracy}"
             else:
-                # No CUDA support
-                device_text += " - No CUDA"
-            
-            # Add model performance info
-            if model_info:
-                speed_rating = model_info.get('speed_rating', 'Unknown')
-                accuracy_rating = model_info.get('accuracy_rating', 'Unknown')
-                device_text += f" | Speed: {speed_rating}, Accuracy: {accuracy_rating}"
+                # Fallback display
+                device_text = f"Engine: {model_type.upper()} {self.config.clip.model_name}"
+                if model_info:
+                    speed = model_info.get('speed_rating', 'Unknown')
+                    accuracy = model_info.get('accuracy_rating', 'Unknown')
+                    device_text += f" | Speed: {speed}, Accuracy: {accuracy}"
             
             # Show if map art detection is enabled
             if self.config.vision.enable_map_art_detection:
@@ -327,19 +322,22 @@ class MainWindow:
             self.device_label.config(text=device_text)
             
             # Log detailed info for debugging
-            logger.info("Engine: CLIP")
+            logger.info(f"Engine: {model_type.upper()}")
             logger.info(f"Model: {self.config.clip.model_name}")
             logger.info(f"Performance: {model_info.get('speed_rating', 'Unknown')} speed, {model_info.get('accuracy_rating', 'Unknown')} accuracy")
-            device_info = self.search_engine.optimized_strategy.clip_engine.get_device_info()
-            logger.info(f"Device Status: {device_info.get('cuda_status', 'Unknown')}")
-            if device_info.get('cuda_error'):
-                logger.warning(f"CUDA Error: {device_info['cuda_error']}")
+            
+            if hasattr(self.search_engine, 'optimized_strategy'):
+                device_info = self.search_engine.optimized_strategy.clip_engine.get_device_info()
+                logger.info(f"Device Status: {device_info.get('cuda_status', 'Unknown')}")
+                if device_info.get('cuda_error'):
+                    logger.warning(f"CUDA Error: {device_info['cuda_error']}")
                 
         except Exception as e:
             # Fallback display
             model_name = getattr(self.config.clip, 'model_name', 'Unknown')
-            self.device_label.config(text=f"Engine: CLIP {model_name} (Error)")
-            logger.warning(f"Failed to get device info for CLIP: {e}")
+            model_type = self.config.clip.get_model_type(model_name)
+            self.device_label.config(text=f"Engine: {model_type.upper()} {model_name} (Error)")
+            logger.warning(f"Failed to get device info for {model_type}: {e}")
     
     def _browse_user_image(self):
         """Open file dialog to select user image"""
@@ -1314,7 +1312,7 @@ class MainWindow:
             html_file_to_check = None
             
             # Try to find an HTML file from any model's cache
-            all_models = ['ViT-B/32', 'ViT-L/14', 'RN50x64', 'ViT-B/16']
+            all_models = ['ViT-L/14', 'RN50x64', 'ViT-B/16', 'DINOv2-Base']
             for model in all_models:
                 model_paths = cache_manager._get_model_cache_paths(model)
                 if model_paths['parsed_metadata_file'].exists():
@@ -1327,7 +1325,7 @@ class MainWindow:
                         continue
             
             if html_file_to_check is None:
-                logger.info(f"No previously parsed messages found for any model")
+                logger.info(f"No previously parsed messages found for {current_model}")
                 return
             
             # Check if this HTML file is still valid (cache manager handles cross-model checking)
@@ -1503,7 +1501,7 @@ class MainWindow:
                                 if current_model == "ViT-L/14":
                                     map_art_status = "Enabled - Recommended with ViT-L/14. Auto-disabled during cache building."
                                 else:
-                                    map_art_status = "Enabled - Usually more accurate. Recommend ViT-L/14 for best results."
+                                    map_art_status = "Enabled - Usually more accurate."
                             else:
                                 map_art_status = "Disabled - Uses full images for similarity search"
                         except Exception as e:
@@ -1585,7 +1583,7 @@ class MainWindow:
                 if current_model == "ViT-L/14":
                     status_text = "Enabled - Recommended with ViT-L/14. Auto-disabled during cache building."
                 else:
-                    status_text = "Enabled - Usually more accurate. Recommend ViT-L/14 for best results."
+                    status_text = "Enabled - Usually more accurate."
             else:
                 status_text = "Disabled - Uses full images for similarity search"
             self.map_art_status_var.set(status_text)
@@ -1646,14 +1644,12 @@ class MainWindow:
                     message = ("Map art detection enabled! 🎯\n\n"
                              "✅ Images will be analyzed to detect and crop map artwork before similarity search\n"
                              "⚡ Auto-disabled during cache building for speed\n"
-                             "🎯 Usually more accurate than using full images\n"
-                             "🏆 Optimal results with ViT-L/14 model")
+                             "🎯 Usually more accurate than using full images")
                 else:
                     message = ("Map art detection enabled! 🎯\n\n"
                              "✅ Images will be analyzed to detect and crop map artwork before similarity search\n"
                              "⚡ Auto-disabled during cache building for speed\n"
-                             "🎯 Usually more accurate than using full images\n"
-                             "💡 For best results, consider switching to ViT-L/14")
+                             "🎯 Usually more accurate than using full images")
                 messagebox.showinfo("Map Art Detection Enabled", message)
             else:
                 messagebox.showinfo("Map Art Detection Disabled", 
