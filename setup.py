@@ -78,14 +78,34 @@ torchaudio==2.6.0"""
         if not success:
             return False
         
-        # Then install other dependencies from standard PyPI
+        # Then install other dependencies from standard PyPI including transformers
         other_requirements = """numpy
 Pillow
 requests
 colorlog
 beautifulsoup4==4.12.3
 opencv-python==4.11.0.86
-lxml>=4.9.0"""
+lxml>=4.9.0
+transformers>=4.30.0
+tokenizers>=0.13.0
+safetensors>=0.3.0
+huggingface-hub>=0.15.0
+ftfy>=6.1.0
+regex>=2023.6.0
+certifi
+charset-normalizer
+colorama
+filelock
+Jinja2
+MarkupSafe
+mpmath
+networkx
+packaging>=20.0
+sympy
+tqdm
+typing_extensions
+urllib3
+wcwidth"""
         
         with open("requirements_other_temp.txt", "w") as f:
             f.write(other_requirements)
@@ -115,7 +135,27 @@ requests
 colorlog
 beautifulsoup4==4.12.3
 opencv-python==4.11.0.86
-lxml>=4.9.0"""
+lxml>=4.9.0
+transformers>=4.30.0
+tokenizers>=0.13.0
+safetensors>=0.3.0
+huggingface-hub>=0.15.0
+ftfy>=6.1.0
+regex>=2023.6.0
+certifi
+charset-normalizer
+colorama
+filelock
+Jinja2
+MarkupSafe
+mpmath
+networkx
+packaging>=20.0
+sympy
+tqdm
+typing_extensions
+urllib3
+wcwidth"""
         
         with open("requirements_cpu_temp.txt", "w") as f:
             f.write(cpu_requirements)
@@ -174,6 +214,10 @@ def cleanup_dependencies():
         "torchvision", 
         "torchaudio",
         "clip-by-openai",  # CLIP package name
+        "transformers",    # DINOv2 support
+        "tokenizers",      # Transformers dependency
+        "safetensors",     # Transformers dependency
+        "huggingface-hub", # Transformers dependency
         "numpy",
         "Pillow",
         "requests",
@@ -190,7 +234,15 @@ def cleanup_dependencies():
         "packaging",
         "beautifulsoup4",
         "opencv-python",  # Computer vision for map art detection
-        "ultralytics"     # YOLO object detection (optional)
+        "ultralytics",    # YOLO object detection (optional)
+        "lxml",
+        "certifi",
+        "charset-normalizer",
+        "colorama",
+        "MarkupSafe",
+        "mpmath",
+        "urllib3",
+        "wcwidth"
     ]
     
     print(f"\n🗑️  Removing packages: {', '.join(packages_to_remove)}")
@@ -312,7 +364,7 @@ def main():
     
     packages_to_check = [
         "torch", "torchvision", "numpy", "clip", 
-        "PIL", "requests", "colorlog", "bs4", "cv2"
+        "PIL", "requests", "colorlog", "bs4", "cv2", "transformers"
     ]
     
     failed_imports = []
