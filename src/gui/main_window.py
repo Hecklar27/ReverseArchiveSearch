@@ -18,6 +18,7 @@ from core.config import Config
 from data.discord_parser import DiscordParser
 from data.models import DiscordMessage, SearchResult, ProcessingStats
 from search.strategies import SearchEngine
+from gui.snipping_tool import SnippingTool
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +72,10 @@ class MainWindow:
         self.user_image_var = tk.StringVar()
         self.user_image_entry = ttk.Entry(self.control_frame, textvariable=self.user_image_var, width=50)
         self.user_image_entry.grid(row=0, column=1, padx=(5, 0), pady=2, sticky=tk.EW)
-        ttk.Button(self.control_frame, text="Browse", 
+        ttk.Button(self.control_frame, text="Browse",
                   command=self._browse_user_image).grid(row=0, column=2, padx=(5, 0), pady=2)
+        ttk.Button(self.control_frame, text="Snip Screen",
+                  command=self._snip_screen).grid(row=0, column=3, padx=(5, 0), pady=2)
         
         ttk.Label(self.control_frame, text="HTML Archive:").grid(row=1, column=0, sticky=tk.W, pady=2)
         self.html_file_var = tk.StringVar()
@@ -357,7 +360,29 @@ class MainWindow:
             self.user_image_path = Path(filename)
             self.user_image_var.set(str(self.user_image_path))
             logger.info(f"Selected user image: {self.user_image_path}")
-    
+
+    def _snip_screen(self):
+        """Launch the snipping tool and use the captured image"""
+        import tempfile
+        import os
+
+        tool = SnippingTool(self.root)
+        image = tool.start()
+
+        if image is None:
+            return
+
+        # Save the snipped image to a temp file so the rest of the pipeline
+        # (which expects a file path) works without modification.
+        tmp_dir = os.path.join(tempfile.gettempdir(), "ReverseArchiveSearch")
+        os.makedirs(tmp_dir, exist_ok=True)
+        tmp_path = os.path.join(tmp_dir, "snip.png")
+        image.save(tmp_path, "PNG")
+
+        self.user_image_path = Path(tmp_path)
+        self.user_image_var.set(f"[Screen Snip] {self.user_image_path}")
+        logger.info(f"Screen snip saved to: {self.user_image_path}")
+
     def _browse_html_archive(self):
         """Open file dialog to select HTML archive"""
         filetypes = [
